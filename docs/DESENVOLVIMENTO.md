@@ -2,7 +2,7 @@
 
 ## Abrir e jogar
 
-Use Unity 6000.3.26f1. Abra `Assets/Scenes/Percurso.unity` e pressione Play. A cena contém as duas fases; somente a fase atual fica ativa. O menu inicia o tutorial. Após vencê-lo, **Continuar a fuga** inicia o desafio e o menu passa a oferecer acesso direto a ele.
+Use Unity 6000.3.26f1. Abra `Assets/Scenes/Percurso.unity` e pressione Play. A cena contém as duas fases; somente a fase atual fica ativa. O menu contém nome, subtítulo de fuga, **Jogar** (desafio direto) e **Tutorial** (opcional). Após vencer o tutorial, **Continuar a fuga** inicia o desafio. Não há bloqueio por progresso.
 
 WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerdo ou direcional do controle também move; A confirma os botões e Start pausa. O suporte ao controle deve ser conferido com dispositivo físico antes da entrega final.
 
@@ -22,9 +22,9 @@ O desafio conecta cinco setores alternando passagens superiores e inferiores. Re
 - Barra giratória e pêndulo: `RotatingHazard`, com ângulo inicial, velocidade angular, opção `Oscillates`, amplitude e período. O Rigidbody2D fica na raiz sem escala; a barra filha contém o trigger. A rotação segue o relógio da fase, portanto pausa e reinício mantêm a sincronização.
 - Armadilhas: `CycleTrap`, com tempo apagado, aviso, tempo ativo e deslocamento inicial. O amarelo é aviso e ainda não causa dano. Vermelho causa dano mesmo se o jogador já estiver parado dentro da área. No tutorial, o texto reforça o estado além da cor.
 - Pisos: `SlowZone`, com multiplicador de velocidade. Não acumulam penalidades: vale a redução mais forte sob o centro do personagem.
-- Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Uma cápsula vertical de 0,50 × 0,84 unidades, centro 0,2 acima da raiz, define o contato. O movimento usa Collider2D.Cast com essa mesma cápsula e uma margem de 0,02 para respeitar as paredes, inclusive a posição deslocada do collider. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
+- Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Uma cápsula vertical de 0,50 × 0,84 unidades, centro 0,2 acima da raiz, define o contato. O movimento usa CapsuleCast com a forma real do corpo e margem de 0,02. A origem acompanha a posição física, sem atraso da interpolação visual. Ao encostar numa parede, conserva a parte tangencial do movimento para sair e voltar à guarita; não é um navegador geral para labirintos.
 - `GameController`: fases, transições, recordes, mensagens e controle do relógio.
-- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé com metas de estrelas e controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v6, desafio v6, devido ao ajuste das hitboxes), preservando o desbloqueio do desafio.
+- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé com metas de estrelas e controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v6, desafio v7 após o fechamento dos desvios do pêndulo). Os tempos anteriores do desafio permanecem armazenados, mas não competem com o percurso corrigido.
 
 Paredes usam a camada `CourseWalls` (8). Ao adicionar uma parede, use essa camada para os inimigos enxergarem e respeitarem a colisão. Paredes precisam de `BoxCollider2D` sem trigger.
 
@@ -64,16 +64,16 @@ Os conceitos de objetos, componentes, física, scripts, triggers e interface seg
 
 O template WebGL mantém o canvas posicionado dentro da área visível da janela, sem o tamanho mínimo implícito do antigo contêiner Grid. Isso permite reduzir a altura ou a largura da janela sem cortar o rodapé; `CanvasScaler` e `CameraFit` continuam ajustando a interface e a arena.
 
-O tutorial tem seis dicas. A primeira explica que tocar em obstáculos móveis encerra a tentativa; o guarda é descrito pelo comportamento de perseguição, sem instruir a manobra para passar. O segundo bloco deslizante, junto à passagem inferior, não mostra popup. A pontuação continua com o mesmo valor anterior: 1100 pela fuga mais 10 por segundo restante, arredondado para cima.
+O tutorial tem seis dicas. A primeira explica que tocar em obstáculos móveis encerra a tentativa; o guarda é descrito pelo comportamento de perseguição, sem instruir a manobra para passar. O segundo bloco deslizante, junto à passagem inferior, não mostra popup. A avaliação usa apenas tempo e estrelas; a fórmula de pontos do protótipo foi removida.
 
 
 ## Estrelas e telas de resultado
 
 Metas iniciais: tutorial 25 s para três estrelas e 40 s para duas; desafio 24 s e 31 s. Qualquer vitória mais lenta recebe uma estrela. Derrota não recebe estrelas. A comparação usa o tempo real da partida; os tempos de resultado e recorde são exibidos com duas casas decimais, arredondadas para cima para não disfarçar um excesso sobre o limite.
 
-`BestStars` é derivado do melhor tempo já salvo, sem uma segunda chave de persistência que possa ficar desatualizada. A versão de recordes permanece 6: não houve alteração no percurso, nas colisões, na velocidade ou nos tempos. Pausar e reiniciar não concedem estrelas. Repetir uma fase com resultado inferior preserva o recorde anterior.
+`BestStars` é derivado do melhor tempo já salvo, sem uma segunda chave de persistência que possa ficar desatualizada. Na revisão que introduziu as estrelas, a versão dos recordes permaneceu 6. A revisão posterior das passagens usa v7 apenas no desafio. Pausar e reiniciar não concedem estrelas. Repetir uma fase com resultado inferior preserva o recorde anterior.
 
-A pausa usa cartão de 640 × 300, apenas título e botões. Derrotas usam 880 × 520, com texto específico para contato ou tempo. Vitória usa 880 × 690 com título, mensagem, três estrelas preenchidas conforme a classificação, tempo, pontos, metas e ações. O menu inicial mantém as dimensões anteriores. Os subtítulos antigos foram removidos da pausa e dos resultados.
+A pausa usa cartão de 640 × 300, apenas título e botões. Derrotas usam 880 × 520, com texto específico para contato ou tempo. Vitória usa 880 × 690 com título, mensagem, três estrelas preenchidas conforme a classificação, tempo, metas e ações. O menu inicial foi simplificado na revisão descrita abaixo. Os subtítulos antigos foram removidos da pausa e dos resultados.
 
 Validação da revisão: 14 testes EditMode e 31 PlayMode aprovados, incluindo limites inclusivos, causas de derrota, pausa compacta, três classificações, persistência após recarregar a cena e recordes separados por fase. Auditoria: os 79 registros mantêm física e configurações anteriores, com adição somente das metas de estrelas; reconstrução final idêntica. No navegador, tutorial concluído com teclado em 19,45 s (3 estrelas) e 44,34 s (1 estrela), mantendo o recorde anterior. Tela de vitória conferida em 1280 × 720 e 1280 × 560.
 
@@ -81,4 +81,14 @@ A conferência visual também detectou o corte da segunda linha dos títulos de 
 
 Foi corrigido um caso anterior do piso elétrico: o corpo físico parado podia dormir e deixar de emitir eventos contínuos de trigger. CycleTrap agora verifica a interseção real dos colliders durante a fase ativa, respeitando pausa e colliders desativados. Um teste coloca explicitamente o jogador em repouso físico antes de ligar a corrente e exige derrota por contato, sem estrelas.
 
-A compilação final também foi conferida no navegador: permanecer imóvel no piso elétrico encerrou a tentativa por contato em 3,42 s; aguardar no início do desafio encerrou por tempo em 38 s. Ambas as telas exibiram o título completo, a mensagem correspondente, zero pontos e nenhuma estrela. Console sem erros ou avisos.
+A compilação final também foi conferida no navegador: permanecer imóvel no piso elétrico encerrou a tentativa por contato em 3,42 s; aguardar no início do desafio encerrou por tempo em 38 s. Ambas as telas exibiram o título completo, a mensagem correspondente e nenhuma estrela. Console sem erros ou avisos.
+
+## Revisão do menu e das passagens
+
+O menu inicial usa cartão de 780 × 550, com apenas nome do jogo, subtítulo e dois botões: Jogar e Tutorial. O fundo opaco oculta o cenário, cabeçalho, rodapé e instruções enquanto o menu está aberto. Pausa e resultados mantêm seus respectivos formatos. A pontuação numérica foi removida das regras, da interface e do registro de partidas; permanecem tempo, estrelas e recorde.
+
+O desafio tem grades de 1,1 × 0,35 em x=-2,15 e x=2,15, ambas em y=-0,3. Elas fecham as bordas fora do alcance do pêndulo, deixando um vão central de 3,2 unidades. O alcance, período, amplitude, hitbox e posição do pêndulo permanecem iguais. Os limites de estrelas e de tempo também permanecem iguais, sujeitos a novas partidas de balanceamento.
+
+O travamento do guarda na saída diagonal da guarita foi reproduzido por teste antes da correção. A movimentação preserva o deslocamento paralelo à parede e usa a posição física atual para as consultas de colisão. Os testes cobrem a saída diagonal, o retorno pelos dois lados, respeito às paredes e a manobra completa para concluir o tutorial.
+
+Validação final: 14 testes EditMode e 35 PlayMode aprovados. A auditoria compara 81 registros de física e regras; em relação à versão anterior, apenas duas grades foram acrescentadas e a versão do recorde do desafio passou para 7. A reconstrução mantém os 81 registros idênticos. No WebGL, o tutorial foi concluído em 18,59 s após atrair o guarda na diagonal e contorná-lo; a vitória mostrou tempo e três estrelas, sem pontos. Ambos os botões do menu foram conferidos, assim como as grades do desafio. Console sem erros ou avisos.

@@ -14,7 +14,6 @@ namespace ObstacleCourse
         public float Elapsed => Duration - Remaining;
         public string EndReason { get; private set; } = "";
         public DefeatCause Defeat { get; private set; } = DefeatCause.None;
-        public int Score => State == RunState.Won ? 1100 + (int)Math.Ceiling(Remaining * 10) : 0;
 
         public RunSession(float duration)
         {

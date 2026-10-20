@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class NewMechanicsTests
     {
         private GameController game;
-        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v6.0", "ObstacleCourse.BestTime.v6.1" };
+        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v6.0", "ObstacleCourse.BestTime.v7.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] values = new float[3];
         [UnitySetUp] public IEnumerator Load()
@@ -237,9 +237,8 @@ namespace ObstacleCourse.Tests
         }
         [UnityTest] public IEnumerator ProgressionAndRetryKeepCorrectLevelAndRestartAttempt()
         {
-            Assert.IsFalse(game.ChallengeUnlocked);
             game.ReachFinish(); game.PrimaryAction(); yield return null;
-            Assert.AreEqual(1,game.LevelIndex); Assert.IsTrue(game.ChallengeUnlocked);
+            Assert.AreEqual(1,game.LevelIndex);
             Assert.AreEqual(RunState.Playing,game.Session.State); Assert.AreEqual(38,game.Session.Duration);
             Assert.IsFalse(game.levels[0].gameObject.activeSelf); Assert.IsTrue(game.levels[1].gameObject.activeSelf);
             game.TakeDamage(); Assert.AreEqual(RunState.Lost,game.Session.State);
@@ -247,7 +246,7 @@ namespace ObstacleCourse.Tests
             Assert.AreEqual(1,game.LevelIndex); Assert.AreEqual(RunState.Playing,game.Session.State);
             game.ReachFinish(); Assert.IsFalse(game.HasNextLevel);
             Assert.AreEqual("VOCÊ\nESCAPOU!",game.hud.title.text);
-            game.ReturnToMenu(); Assert.IsTrue(game.hud.challenge.gameObject.activeSelf);
+            game.ReturnToMenu(); Assert.IsTrue(game.hud.tutorial.gameObject.activeSelf);
             game.StartChallenge(); Assert.AreEqual(1,game.LevelIndex);
         }
         [UnityTest] public IEnumerator PauseFreezesEnemyTrapAndClock()
@@ -361,6 +360,53 @@ namespace ObstacleCourse.Tests
                 Assert.Greater(unsafeAttempts,0,rotor.name+" precisa oferecer risco na mesma passagem.");
             }
         }
+        [UnityTest] public IEnumerator ChallengePendulumGrillesBlockBothSidesAndKeepTimedCrossing()
+        {
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger) collider.enabled=false;
+            foreach(var enemy in game.Level.enemies) enemy.enabled=false;
+            game.player.enabled=false;
+            var body=game.player.GetComponent<Rigidbody2D>();
+            var pendulum=game.Level.rotors[1];
+            Vector2 center=pendulum.transform.position;
+            foreach(float x in new[] {-2.4f,-1.9f,1.9f,2.4f})
+            {
+                game.StartRun(); Place(new Vector2(x,center.y-1.5f));
+                for(int i=0;i<25;i++)
+                {
+                    body.linearVelocity=Vector2.up*game.player.speed;
+                    yield return new WaitForFixedUpdate();
+                }
+                Assert.Less(body.position.y,center.y-.7f,"Lateral bypass remained open at x="+x);
+                body.linearVelocity=Vector2.zero;
+            }
+            var hazard=pendulum.GetComponentInChildren<BoxCollider2D>();
+            hazard.enabled=true;
+            int safe=0,unsafeAttempts=0;
+            for(int phase=0;phase<12;phase++)
+            {
+                game.StartRun(); game.Session.Tick(pendulum.period*phase/12);
+                pendulum.GetComponent<Rigidbody2D>().rotation=pendulum.AngleAt(game.Session.Elapsed);
+                Place(center+new Vector2(1,-2.15f));
+                float deadline=Time.realtimeSinceStartup+2;
+                while(game.IsPlaying && body.position.y<center.y+2.15f && Time.realtimeSinceStartup<deadline)
+                {
+                    body.linearVelocity=Vector2.up*game.player.speed;
+                    yield return null;
+                }
+                body.linearVelocity=Vector2.zero;
+                if(game.Session.State==RunState.Lost) unsafeAttempts++;
+                else
+                {
+                    Assert.GreaterOrEqual(body.position.y,center.y+2.15f,"The required passage became blocked.");
+                    safe++;
+                }
+            }
+            Assert.Greater(safe,0,"There must be a safe timed crossing.");
+            Assert.Greater(unsafeAttempts,0,"The same crossing must have a dangerous timing.");
+        }
+
         [UnityTest] public IEnumerator TutorialGuardBlocksEveryLineThroughTheNarrowExit()
         {
             var enemy=game.Level.enemies[0];

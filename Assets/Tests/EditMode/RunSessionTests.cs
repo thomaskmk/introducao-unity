@@ -21,7 +21,7 @@ namespace ObstacleCourse.Tests
         {
             var run = new RunSession(60); run.Begin(); run.Tick(61); run.Win();
             Assert.AreEqual(RunState.Lost, run.State); Assert.AreEqual(0, run.Remaining);
-            Assert.AreEqual(60, run.Elapsed); Assert.AreEqual(0, run.Score);
+            Assert.AreEqual(60, run.Elapsed);
             Assert.AreEqual(DefeatCause.Timeout, run.Defeat);
         }
         [Test] public void AdditionalHitsAfterDefeatDoNothing()
@@ -37,12 +37,11 @@ namespace ObstacleCourse.Tests
             Assert.AreEqual(RunState.Paused, run.State); Assert.AreEqual(50, run.Remaining);
             run.Resume(); run.Tick(5); Assert.AreEqual(45, run.Remaining);
         }
-        [Test] public void VictoryFreezesFinalTimeAndAwardsScore()
+        [Test] public void VictoryFreezesFinalTime()
         {
             var run = new RunSession(60); run.Begin(); run.Tick(20); run.Win();
             run.Tick(40); Assert.IsFalse(run.TakeDamage());
             Assert.AreEqual(RunState.Won, run.State); Assert.AreEqual(20, run.Elapsed);
-            Assert.AreEqual(1500, run.Score);
         }
         [Test] public void RestartResetsEveryRunValue()
         {

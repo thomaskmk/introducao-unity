@@ -13,7 +13,6 @@ namespace ObstacleCourse
         public CourseLevel Level => levels[LevelIndex];
         public bool IsPlaying => Session != null && Session.State == RunState.Playing;
         public bool HasNextLevel => LevelIndex + 1 < levels.Length;
-        public bool ChallengeUnlocked => PlayerPrefs.GetInt("ObstacleCourse.ChallengeUnlocked.v2", 0) == 1;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
         public int EarnedStars => Session.State == RunState.Won ? Level.StarsForTime(Session.Elapsed) : 0;
         public int BestStars => BestTime > 0 ? Level.StarsForTime(BestTime) : 0;
@@ -46,7 +45,8 @@ namespace ObstacleCourse
         }
         public void PrimaryAction()
         {
-            if (Session.State == RunState.Paused) { Session.Resume(); PresentState(); }
+            if (Session.State == RunState.Menu) { StartChallenge(); }
+            else if (Session.State == RunState.Paused) { Session.Resume(); PresentState(); }
             else if (Session.State == RunState.Won && HasNextLevel)
             {
                 SelectLevel(LevelIndex + 1);
@@ -56,8 +56,14 @@ namespace ObstacleCourse
         }
         public void StartChallenge()
         {
-            if (!ChallengeUnlocked || Session.State != RunState.Menu) return;
+            if (Session.State != RunState.Menu) return;
             SelectLevel(1);
+            StartRun();
+        }
+        public void StartTutorial()
+        {
+            if (Session.State != RunState.Menu) return;
+            SelectLevel(0);
             StartRun();
         }
         public void StartRun()
@@ -95,7 +101,6 @@ namespace ObstacleCourse
             if (!IsPlaying) return;
             Session.Win();
             if (BestTime <= 0 || Session.Elapsed < BestTime) PlayerPrefs.SetFloat(BestTimeKey, Session.Elapsed);
-            if (HasNextLevel) PlayerPrefs.SetInt("ObstacleCourse.ChallengeUnlocked.v2", 1);
             PlayerPrefs.Save();
             PresentState();
         }
@@ -105,7 +110,7 @@ namespace ObstacleCourse
             Time.timeScale = IsPlaying ? 1 : 0;
             hud.ShowState(this);
             if (Session.State == RunState.Won || Session.State == RunState.Lost)
-                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; pontos: {Session.Score}; estrelas: {EarnedStars}");
+                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; estrelas: {EarnedStars}");
         }
         private void OnApplicationFocus(bool focused)
         {

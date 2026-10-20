@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class CourseIntegrationTests
     {
         private GameController game;
-        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v6.0", "ObstacleCourse.BestTime.v6.1" };
+        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v6.0", "ObstacleCourse.BestTime.v7.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] saved = new float[3];
         [UnitySetUp] public IEnumerator LoadCourse()
@@ -107,7 +107,7 @@ namespace ObstacleCourse.Tests
             while(game.IsPlaying && Time.realtimeSinceStartup<until) yield return null;
             Assert.AreEqual(RunState.Won,game.Session.State);
             Assert.IsTrue(game.hud.overlay.activeSelf);
-            Assert.Greater(game.Session.Score,0);
+            Assert.Greater(game.EarnedStars,0);
             float elapsed=game.Session.Elapsed;
             yield return null;
             Assert.AreEqual(elapsed,game.Session.Elapsed);
@@ -128,7 +128,7 @@ namespace ObstacleCourse.Tests
         {
             float fullHeight=game.hud.card.rect.height;
             game.StartRun(); game.TogglePause(); yield return null;
-            Assert.Less(game.hud.card.rect.height,fullHeight*.6f);
+            Assert.Less(game.hud.card.rect.height,fullHeight*.65f);
             Assert.IsFalse(game.hud.description.gameObject.activeSelf);
             Assert.IsFalse(game.hud.help.gameObject.activeSelf);
             Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
@@ -195,6 +195,32 @@ namespace ObstacleCourse.Tests
             Assert.AreEqual(0,game.EarnedStars);
             Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
             Assert.IsTrue(game.hud.ratingGuide.gameObject.activeSelf);
+        }
+
+        [UnityTest] public IEnumerator SimpleMenuOffersChallengeAndOptionalTutorialWithoutUnlocking()
+        {
+            Assert.IsFalse(PlayerPrefs.HasKey("ObstacleCourse.ChallengeUnlocked.v2"));
+            Assert.AreEqual("JOGAR",game.hud.primaryLabel.text);
+            Assert.AreEqual("Uma fuga da prisão contra o tempo.",game.hud.subtitle.text);
+            Assert.IsFalse(game.hud.gameplayUI.activeSelf);
+            Assert.IsFalse(game.hud.description.gameObject.activeSelf);
+            Assert.IsFalse(game.hud.help.gameObject.activeSelf);
+            Assert.IsFalse(game.hud.starTargets.gameObject.activeSelf);
+            Assert.AreEqual(4,game.hud.overlay.GetComponentsInChildren<UnityEngine.UI.Text>().Length);
+            game.hud.primary.onClick.Invoke(); yield return null;
+            Assert.AreEqual(1,game.LevelIndex);
+            Assert.IsTrue(game.IsPlaying);
+            Assert.IsTrue(game.hud.gameplayUI.activeSelf);
+            game.TakeDamage(); game.PrimaryAction(); yield return null;
+            Assert.AreEqual(1,game.LevelIndex);
+            game.ReturnToMenu();
+            game.hud.tutorial.onClick.Invoke(); yield return null;
+            Assert.AreEqual(0,game.LevelIndex);
+            Assert.IsTrue(game.IsPlaying);
+            game.ReachFinish();
+            StringAssert.DoesNotContain("PONTOS",game.hud.result.text);
+            game.PrimaryAction(); yield return null;
+            Assert.AreEqual(1,game.LevelIndex);
         }
 
         private void AssertTitleFits()

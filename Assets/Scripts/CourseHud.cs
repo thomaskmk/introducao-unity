@@ -10,7 +10,8 @@ namespace ObstacleCourse
         public Text best;
         public Text status;
         public TutorialGuide guide;
-        public Button challenge;
+        public Button tutorial;
+        public GameObject gameplayUI;
         public Image timerFill;
         public GameObject overlay;
         public Text title;
@@ -33,6 +34,7 @@ namespace ObstacleCourse
         public void Refresh(GameController game)
         {
             var run = game.Session;
+            gameplayUI.SetActive(run.State != RunState.Menu);
             timer.text = Mathf.CeilToInt(run.Remaining).ToString("00") + "s";
             timer.color = run.Remaining <= 10 ? dangerColor : Color.white;
             timerFill.fillAmount = run.Remaining / run.Duration;
@@ -51,27 +53,29 @@ namespace ObstacleCourse
             Refresh(game);
             if (!show) { if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); return; }
             secondary.gameObject.SetActive(run.State != RunState.Menu);
-            challenge.gameObject.SetActive(run.State == RunState.Menu && game.ChallengeUnlocked);
+            tutorial.gameObject.SetActive(run.State == RunState.Menu);
             bool won = run.State == RunState.Won;
             bool menu = run.State == RunState.Menu;
             subtitle.gameObject.SetActive(menu);
-            description.gameObject.SetActive(run.State != RunState.Paused);
-            help.gameObject.SetActive(run.State != RunState.Paused);
+            description.gameObject.SetActive(!menu && run.State != RunState.Paused);
+            help.gameObject.SetActive(!menu && run.State != RunState.Paused);
             result.gameObject.SetActive(won || run.State == RunState.Lost);
             stars.gameObject.SetActive(won);
             stars.SetRating(game.EarnedStars);
             starCaption.gameObject.SetActive(won);
             starCaption.text = StarText(game.EarnedStars);
-            starTargets.gameObject.SetActive(won || menu);
+            starTargets.gameObject.SetActive(won);
+            var shade = overlay.GetComponent<Image>();
+            var shadeColor = shade.color; shadeColor.a = menu ? 1 : .91f; shade.color = shadeColor;
             starTargets.text = Targets(game.Level);
             ApplyLayout(run.State);
             result.text = "";
             if (run.State == RunState.Menu)
             {
-                subtitle.text = "DUAS FASES  /  FUGA CONTRA O TEMPO";
+                subtitle.text = "Uma fuga da prisão contra o tempo.";
                 title.text = "CONTRA O\nRELÓGIO";
-                description.text = "Aprenda no tutorial e enfrente o desafio. Alcance a área verde.\nEvite os perigos: um impacto encerra a tentativa.";
-                primaryLabel.text = "INICIAR TUTORIAL";
+                description.text = "";
+                primaryLabel.text = "JOGAR";
             }
             else if (run.State == RunState.Paused)
             {
@@ -85,7 +89,7 @@ namespace ObstacleCourse
                     (run.Defeat == DefeatCause.Timeout ? "TEMPO\nESGOTADO" : "FUGA\nINTERROMPIDA");
                 description.text = won ? (game.HasNextLevel ? "Uma etapa vencida. A fuga continua." :
                     "Você deixou a prisão para trás. Consegue fugir mais rápido?") : run.EndReason;
-                result.text = $"TEMPO  {TimeText(run.Elapsed)}s     PONTOS  {run.Score}";
+                result.text = $"TEMPO  {TimeText(run.Elapsed)}s";
                 primaryLabel.text = won ? (game.HasNextLevel ? "CONTINUAR A FUGA" : "JOGAR NOVAMENTE") : "TENTAR NOVAMENTE";
             }
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(primary.gameObject);
@@ -104,8 +108,8 @@ namespace ObstacleCourse
             bool paused = state == RunState.Paused;
             bool won = state == RunState.Won;
             bool lost = state == RunState.Lost;
-            float width = paused ? 640 : 880;
-            float height = paused ? 300 : lost ? 520 : 690;
+            float width = paused ? 640 : state == RunState.Menu ? 780 : 880;
+            float height = paused ? 300 : lost ? 520 : state == RunState.Menu ? 550 : 690;
             card.sizeDelta = new Vector2(width, height);
             Place(accent.rectTransform, width / 2, height - 3, width, 6);
             accent.color = lost ? dangerColor : won ? stars.earnedColor : normalColor;
@@ -141,17 +145,16 @@ namespace ObstacleCourse
             }
             else
             {
-                title.fontSize = 70; help.fontSize = 17; starTargets.fontSize = 17;
-                Place(title.rectTransform, 440, 495, 800, 190);
-                Place(description.rectTransform, 440, 342, 780, 80);
-                Place(starTargets.rectTransform, 440, 278, 800, 32);
-                Place(primary.GetComponent<RectTransform>(), 440, 204, 410, 68);
-                Place(secondary.GetComponent<RectTransform>(), 440, 121, 410, 52);
-                Place(help.rectTransform, 440, 49, 800, 60);
+                title.fontSize = 66; subtitle.fontSize = 22;
+                Place(title.rectTransform, 390, 410, 700, 170);
+                Place(subtitle.rectTransform, 390, 290, 700, 35);
+                Place(primary.GetComponent<RectTransform>(), 390, 188, 410, 68);
+                Place(tutorial.GetComponent<RectTransform>(), 390, 101, 270, 48);
             }
             // Button labels are centered independently of the changing card/button dimensions.
             FitButtonLabel(primary);
             FitButtonLabel(secondary);
+            FitButtonLabel(tutorial);
         }
 
         private static void Place(RectTransform rect, float x, float y, float width, float height)

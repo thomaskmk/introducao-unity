@@ -112,7 +112,7 @@ public static class CourseBuilder
         level.timeLimit = tutorial ? 90 : 38;
         level.threeStarSeconds = tutorial ? 25 : 24;
         level.twoStarSeconds = tutorial ? 40 : 31;
-        level.layoutVersion = 6; // Character hitboxes now follow the illustrated bodies.
+        level.layoutVersion = tutorial ? 6 : 7; // Challenge now requires crossing the pendulum.
         level.spawn = new Vector2(-13,-4.5f);
         var arena = root.transform;
         Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
@@ -171,6 +171,8 @@ public static class CourseBuilder
                 Rotor("Barra giratória",arena,game,new Vector2(-6,1.4f),4.6f,0,false),
                 Rotor("Pêndulo",arena,game,new Vector2(0,-.3f),4.6f,90,true)
             };
+            Wall("Grade do pêndulo — esquerda",arena,new Vector2(-2.15f,-.3f),new Vector2(1.1f,.35f));
+            Wall("Grade do pêndulo — direita",arena,new Vector2(2.15f,-.3f),new Vector2(1.1f,.35f));
             level.traps=new[] {
                 Trap(arena,game,new Vector2(-12,-.5f),new Vector2(5.4f,1.1f),2.6f,.8f,1.8f,0,false),
                 Trap(arena,game,new Vector2(0,3.5f),new Vector2(5.4f,1.1f),1.8f,.8f,2.1f,1.2f,false),
@@ -301,7 +303,8 @@ public static class CourseBuilder
         var hud=canvasGo.GetComponent<CourseHud>(); game.hud=hud;
         var layout=Rect("Layout centralizado",canvasGo.transform,Vector2.zero,new Vector2(1600,900));
         layout.anchorMin=layout.anchorMax=new Vector2(.5f,.5f);
-        var root=layout;
+        var root=Rect("Durante a partida",layout,new Vector2(800,450),new Vector2(1600,900));
+        hud.gameplayUI=root.gameObject;
         Panel("Cabeçalho",root,new Vector2(800,835),new Vector2(1520,90),Hex("1D3043"));
         Label("Nome",root,"CONTRA O RELÓGIO",new Vector2(250,850),new Vector2(380,30),25,Color.white,TextAnchor.MiddleLeft,true);
         hud.status=Label("Estado",root,"PERCURSO 01",new Vector2(250,817),new Vector2(380,25),15,Mint,TextAnchor.MiddleLeft);
@@ -316,6 +319,7 @@ public static class CourseBuilder
         Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(800,80),new Vector2(1480,30),18,Muted,TextAnchor.MiddleCenter);
         hud.ratingGuide=Label("Metas de estrelas",root,"",new Vector2(800,120),new Vector2(1480,26),17,Muted,TextAnchor.MiddleCenter);
         BuildTutorialGuide(game, hud, root);
+        root=layout;
         var shade=Panel("Telas da partida",root,new Vector2(800,450),new Vector2(2000,1400),new Color(.025f,.05f,.08f,.91f));
         shade.raycastTarget=true; hud.overlay=shade.gameObject;
         var panel=Panel("Cartão",shade.transform,new Vector2(1000,700),new Vector2(880,690),Hex("1B2D40"));
@@ -336,8 +340,8 @@ public static class CourseBuilder
         UnityEventTools.AddPersistentListener(hud.primary.onClick,game.PrimaryAction);
         hud.secondary=ButtonAt("Voltar ao menu",card,"VOLTAR AO MENU",new Vector2(440,121),new Vector2(410,52),Hex("30475B"),Color.white);
         UnityEventTools.AddPersistentListener(hud.secondary.onClick,game.ReturnToMenu);
-        hud.challenge=ButtonAt("Desafio desbloqueado",card,"JOGAR DESAFIO",new Vector2(440,121),new Vector2(410,52),Hex("30475B"),Color.white);
-        UnityEventTools.AddPersistentListener(hud.challenge.onClick,game.StartChallenge);
+        hud.tutorial=ButtonAt("Tutorial opcional",card,"TUTORIAL",new Vector2(390,101),new Vector2(270,48),Hex("30475B"),Color.white);
+        UnityEventTools.AddPersistentListener(hud.tutorial.onClick,game.StartTutorial);
         hud.help=Label("Ajuda",card,"WASD ou setas para mover.  Controle: analógico / direcional.\nEnter / A confirma.  Esc / Start pausa.  R reinicia.",new Vector2(440,49),new Vector2(800,60),17,Muted,TextAnchor.MiddleCenter);
         var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));
         events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();

@@ -100,6 +100,55 @@ namespace ObstacleCourse.Tests
             Assert.AreEqual(RunState.Lost,game.Session.State);
         }
 
+        [UnityTest] public IEnumerator TutorialGuardLeavesDoorwayWhenLuredDiagonallyFromEitherSide()
+        {
+            var enemy=game.Level.enemies[0];
+            var guard=enemy.GetComponent<Rigidbody2D>();
+            var player=game.player.GetComponent<Rigidbody2D>();
+            foreach(float side in new[] {-1f,1f})
+            {
+                game.StartRun(); enemy.enabled=true;
+                player.position=new Vector2(10.8f+side*2.3f,0);
+                Physics2D.SyncTransforms();
+                yield return new WaitForSecondsRealtime(.65f);
+                Assert.IsTrue(game.IsPlaying);
+                Assert.IsTrue(enemy.IsChasing);
+                Assert.Less(guard.position.y,1.4f,"Guard froze against the side of the doorway: "+side);
+                AssertClearOfWalls(enemy);
+                enemy.enabled=false;
+            }
+        }
+
+        [UnityTest] public IEnumerator TutorialGuardReturnsToDoorwayFromEitherSideWithoutStalling()
+        {
+            var enemy=game.Level.enemies[0];
+            var guard=enemy.GetComponent<Rigidbody2D>();
+            var player=game.player.GetComponent<Rigidbody2D>();
+            foreach(float side in new[] {-1f,1f})
+            {
+                game.StartRun(); enemy.enabled=true;
+                guard.position=new Vector2(10.8f+side*2.3f,1.4f);
+                player.position=game.player.spawn;
+                Physics2D.SyncTransforms();
+                float deadline=Time.realtimeSinceStartup+4;
+                while(Vector2.Distance(guard.position,enemy.pointA)>.12f && Time.realtimeSinceStartup<deadline)
+                {
+                    AssertClearOfWalls(enemy);
+                    yield return null;
+                }
+                Assert.Less(Vector2.Distance(guard.position,enemy.pointA),.12f,"Guard could not return through the opening: "+side);
+                Assert.IsFalse(enemy.IsChasing);
+                enemy.enabled=false;
+            }
+        }
+
+        private void AssertClearOfWalls(ChaserEnemy enemy)
+        {
+            foreach(var wall in game.Level.GetComponentsInChildren<Collider2D>())
+                if(wall.gameObject.layer==8 && wall.enabled)
+                    Assert.IsFalse(enemy.GetComponent<Collider2D>().Distance(wall).isOverlapped,"Guard entered "+wall.name+" at "+enemy.GetComponent<Rigidbody2D>().position+"; bounds="+enemy.GetComponent<Collider2D>().bounds+"; separation="+enemy.GetComponent<Collider2D>().Distance(wall).distance);
+        }
+
         [UnityTest] public IEnumerator GuardStopsAtWallsAboveAndBelowUsingItsActualBody()
         {
             foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>()) collider.enabled=false;

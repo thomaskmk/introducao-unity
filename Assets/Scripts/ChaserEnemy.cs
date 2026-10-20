@@ -45,19 +45,40 @@ namespace ObstacleCourse
             next.x = Mathf.Clamp(next.x, territory.xMin, territory.xMax);
             next.y = Mathf.Clamp(next.y, territory.yMin, territory.yMax);
 
-            // Cast the actual collider, including its offset and rounded ends.
-            // Damage and wall avoidance must use the same shape.
-            Vector2 delta = next - body.position;
-            float distance = delta.magnitude;
-            if (distance > 0)
-            {
-                int count = hitbox.Cast(delta / distance, wallFilter, wallHits, distance + .02f);
-                for (int i = 0; i < count; i++)
-                    distance = Mathf.Min(distance, Mathf.Max(0, wallHits[i].distance - .02f));
-                body.MovePosition(body.position + delta.normalized * distance);
-            }
+            MoveAlongWalls(next - body.position);
             visual.color = IsChasing ? new Color(1, .2f, .44f) : new Color(.75f, .33f, .65f);
             if (label != null) label.text = IsChasing ? "!" : "?";
+        }
+        private void MoveAlongWalls(Vector2 remaining)
+        {
+            Vector2 position = body.position;
+            Vector2 scale = transform.lossyScale;
+            Vector2 size = Vector2.Scale(hitbox.size, new Vector2(Mathf.Abs(scale.x), Mathf.Abs(scale.y))) + Vector2.one * .04f;
+            Vector2 offset = transform.TransformVector(hitbox.offset);
+            // Expand the cast by a .02 skin in every direction, including shallow approaches.
+            // Sweep from the physics position, not the interpolated artwork position.
+            // Keep the tangential movement when a wall blocks the diagonal approach.
+            for (int step = 0; step < 3 && remaining.sqrMagnitude > .000001f; step++)
+            {
+                float distance = remaining.magnitude;
+                Vector2 direction = remaining / distance;
+                int count = Physics2D.CapsuleCast(position + offset, size, hitbox.direction,
+                    body.rotation, direction, wallFilter, wallHits, distance);
+                float travel = distance;
+                Vector2 normal = Vector2.zero;
+                for (int i = 0; i < count; i++)
+                {
+                    float approach = -Vector2.Dot(direction, wallHits[i].normal);
+                    if (approach <= .001f) continue;
+                    float allowed = Mathf.Max(0, wallHits[i].distance);
+                    if (allowed < travel) { travel = allowed; normal = wallHits[i].normal; }
+                }
+                position += direction * travel;
+                if (normal == Vector2.zero) break;
+                remaining -= direction * travel;
+                remaining -= normal * Mathf.Min(0, Vector2.Dot(remaining, normal));
+            }
+            body.MovePosition(position);
         }
         public void ResetEnemy()
         {
