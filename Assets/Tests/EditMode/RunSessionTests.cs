@@ -4,17 +4,17 @@ namespace ObstacleCourse.Tests
 {
     public sealed class RunSessionTests
     {
-        [Test] public void OneLifeLosesOnFirstHit()
+        [Test] public void FirstHitEndsTheAttempt()
         {
             var run = new RunSession(90); run.Begin(); run.TakeDamage();
-            Assert.AreEqual(RunState.Lost, run.State); Assert.AreEqual(0, run.Lives);
+            Assert.AreEqual(RunState.Lost, run.State);
         }
-        [Test] public void MenuDoesNotConsumeTimeOrLives()
+        [Test] public void MenuDoesNotConsumeTimeOrAcceptDamage()
         {
             var run = new RunSession(60);
             run.Tick(20); Assert.IsFalse(run.TakeDamage()); run.Win();
             Assert.AreEqual(RunState.Menu, run.State);
-            Assert.AreEqual(60, run.Remaining); Assert.AreEqual(1, run.Lives);
+            Assert.AreEqual(60, run.Remaining);
         }
         [Test] public void TimeoutEndsTheRunAndCannotBecomeVictory()
         {
@@ -26,7 +26,7 @@ namespace ObstacleCourse.Tests
         {
             var run = new RunSession(60); run.Begin(); run.TakeDamage();
             Assert.IsFalse(run.TakeDamage());
-            Assert.AreEqual(0, run.Lives); Assert.AreEqual(RunState.Lost, run.State);
+            Assert.AreEqual(RunState.Lost, run.State);
         }
         [Test] public void PauseFreezesTimeAndRejectsDamageAndVictory()
         {
@@ -45,7 +45,7 @@ namespace ObstacleCourse.Tests
         [Test] public void RestartResetsEveryRunValue()
         {
             var run = new RunSession(60); run.Begin(); run.TakeDamage(); run.Tick(60); run.Begin();
-            Assert.AreEqual(RunState.Playing, run.State); Assert.AreEqual(1, run.Lives);
+            Assert.AreEqual(RunState.Playing, run.State);
             Assert.AreEqual(60, run.Remaining); Assert.AreEqual("", run.EndReason);
         }
         [Test] public void ReturningToMenuStopsTheClock()

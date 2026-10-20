@@ -79,7 +79,7 @@ namespace ObstacleCourse.Tests
             game.player.enabled=false;
             var guide=game.hud.guide;
             var positions=new[] { new Vector2(-10,-3),new Vector2(-9,3),new Vector2(-1,4),
-                new Vector2(-1,1.3f),new Vector2(-1,-1),new Vector2(-1,-4),new Vector2(10,-1) };
+                new Vector2(-1,1.3f),new Vector2(-1,-1),new Vector2(10,-1) };
             for(int i=0;i<positions.Length;i++)
             {
                 Place(positions[i]); yield return null; yield return null;
@@ -92,6 +92,9 @@ namespace ObstacleCourse.Tests
                 Assert.IsFalse(RectTransformUtility.RectangleContainsScreenPoint(guide.card,
                     Camera.main.WorldToScreenPoint(game.player.Position)),"A dica não deve cobrir o personagem.");
             }
+            Place(new Vector2(-1,-4)); yield return null; yield return null;
+            Assert.AreEqual(-1,guide.CurrentTip,"A segunda parede móvel não deve exibir dica.");
+            Assert.IsFalse(guide.card.gameObject.activeSelf);
             Place(new Vector2(-1,2.1f)); yield return null; yield return null;
             Assert.AreEqual(3,guide.CurrentTip,"O aviso de choque deve aparecer antes de alcançar a grade.");
             Assert.IsFalse(RectTransformUtility.RectangleContainsScreenPoint(guide.card,
@@ -161,7 +164,7 @@ namespace ObstacleCourse.Tests
             Assert.AreEqual(TrapPhase.Active,trap.PhaseAt(trap.safeSeconds+trap.warningSeconds));
             Assert.AreEqual(TrapPhase.Safe,trap.PhaseAt(trap.safeSeconds+trap.warningSeconds+trap.activeSeconds));
             Place(trap.transform.position); yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
-            Assert.AreEqual(1,game.Session.Lives);
+            Assert.AreEqual(RunState.Playing,game.Session.State);
             game.Session.Tick(trap.safeSeconds); yield return new WaitForFixedUpdate();
             Assert.AreEqual(RunState.Playing,game.Session.State);
             game.Session.Tick(trap.warningSeconds); yield return new WaitForFixedUpdate(); yield return null;
@@ -210,16 +213,16 @@ namespace ObstacleCourse.Tests
             Assert.LessOrEqual(enemy.GetComponent<Rigidbody2D>().position.x,-6.84f);
             Assert.Greater(enemy.GetComponent<Rigidbody2D>().position.x,-7.2f);
         }
-        [UnityTest] public IEnumerator ProgressionAndRetryKeepCorrectLevelAndResetLife()
+        [UnityTest] public IEnumerator ProgressionAndRetryKeepCorrectLevelAndRestartAttempt()
         {
             Assert.IsFalse(game.ChallengeUnlocked);
             game.ReachFinish(); game.PrimaryAction(); yield return null;
             Assert.AreEqual(1,game.LevelIndex); Assert.IsTrue(game.ChallengeUnlocked);
-            Assert.AreEqual(1,game.Session.Lives); Assert.AreEqual(38,game.Session.Duration);
+            Assert.AreEqual(RunState.Playing,game.Session.State); Assert.AreEqual(38,game.Session.Duration);
             Assert.IsFalse(game.levels[0].gameObject.activeSelf); Assert.IsTrue(game.levels[1].gameObject.activeSelf);
             game.TakeDamage(); Assert.AreEqual(RunState.Lost,game.Session.State);
             game.PrimaryAction(); yield return null;
-            Assert.AreEqual(1,game.LevelIndex); Assert.AreEqual(1,game.Session.Lives);
+            Assert.AreEqual(1,game.LevelIndex); Assert.AreEqual(RunState.Playing,game.Session.State);
             game.ReachFinish(); Assert.IsFalse(game.HasNextLevel);
             Assert.AreEqual("DESAFIO\nSUPERADO!",game.hud.title.text);
             game.ReturnToMenu(); Assert.IsTrue(game.hud.challenge.gameObject.activeSelf);

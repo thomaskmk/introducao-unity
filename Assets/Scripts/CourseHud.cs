@@ -7,10 +7,8 @@ namespace ObstacleCourse
     public sealed class CourseHud : MonoBehaviour
     {
         public Text timer;
-        public Text lives;
         public Text best;
         public Text status;
-        public Text hint;
         public TutorialGuide guide;
         public Button challenge;
         public Image timerFill;
@@ -32,10 +30,8 @@ namespace ObstacleCourse
             timer.color = run.Remaining <= 10 ? dangerColor : Color.white;
             timerFill.fillAmount = run.Remaining / run.Duration;
             timerFill.color = run.Remaining <= 10 ? dangerColor : normalColor;
-            lives.text = run.Lives.ToString();
             best.text = game.BestTime > 0 ? "MELHOR  " + game.BestTime.ToString("F1") + "s" : "MELHOR  —";
             status.text = $"0{game.LevelIndex + 1} / {game.Level.title.ToUpper()}" + (run.Remaining <= 10 ? "  •  CORRA!" : "");
-            hint.text = game.Hint;
             if (guide != null) guide.Refresh(game);
         }
         public void ShowState(GameController game)
@@ -50,7 +46,7 @@ namespace ObstacleCourse
             result.text = "";
             if (run.State == RunState.Menu)
             {
-                subtitle.text = "DUAS FASES  /  UMA VIDA POR TENTATIVA";
+                subtitle.text = "DUAS FASES  /  FUGA CONTRA O TEMPO";
                 title.text = "CONTRA O\nRELÓGIO";
                 description.text = "Aprenda no tutorial e enfrente o desafio. Alcance a área verde.\nEvite os perigos: um impacto encerra a tentativa.";
                 primaryLabel.text = "INICIAR TUTORIAL";
@@ -67,8 +63,8 @@ namespace ObstacleCourse
                 bool won = run.State == RunState.Won;
                 subtitle.text = won ? "CHEGADA ALCANÇADA" : "OBSERVE O MOMENTO DE PASSAR";
                 title.text = won ? (game.HasNextLevel ? "TUTORIAL\nCONCLUÍDO" : "DESAFIO\nSUPERADO!") : "FIM DE\nPARTIDA";
-                description.text = won ? (game.HasNextLevel ? "Você aprendeu os perigos. Agora combine o que aprendeu.\nA próxima fase começa com uma vida e seu próprio relógio." : "Você concluiu as duas fases!\nMelhore sua execução para baixar o tempo.") : run.EndReason + "\nPressione R ou repita esta fase.";
-                result.text = $"TEMPO  {run.Elapsed:F1}s     VIDAS  {run.Lives}     PONTOS  {run.Score}";
+                description.text = won ? (game.HasNextLevel ? "Você aprendeu os perigos. Agora combine o que aprendeu.\nA próxima fase tem seu próprio relógio." : "Você concluiu as duas fases!\nMelhore sua execução para baixar o tempo.") : run.EndReason + "\nPressione R ou repita esta fase.";
+                result.text = $"TEMPO  {run.Elapsed:F1}s     PONTOS  {run.Score}";
                 primaryLabel.text = won && game.HasNextLevel ? "PRÓXIMA FASE" : "REPETIR FASE";
             }
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(primary.gameObject);

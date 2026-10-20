@@ -8,7 +8,7 @@ WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerd
 
 ## Regras
 
-Cada tentativa começa com uma vida. Um impacto encerra a partida imediatamente; não há vida extra nem invulnerabilidade. Reiniciar reposiciona os inimigos, os obstáculos e o jogador, restaura o relógio e devolve uma vida. Perder no desafio não obriga a repetir o tutorial.
+Um impacto encerra a partida imediatamente. Não há contador de vidas nem invulnerabilidade. Reiniciar reposiciona os inimigos, os obstáculos e o jogador e restaura o relógio. Perder no desafio não obriga a repetir o tutorial.
 
 O tutorial tem 90 segundos e o desafio 38. Esses valores devem ser refinados com jogadores. No tutorial, é possível passar por cima ou por baixo do primeiro bloco móvel. A passagem inferior é mais curta e exige sincronizar o movimento com o bloco; ainda é necessário contornar o topo da parede. Uma barra gira continuamente no primeiro setor; um pêndulo oscila no segundo. Grades laterais conduzem aos vãos dentro do alcance de cada barra: observe o movimento e espere uma janela para atravessar. No braço giratório, avance à direita do eixo, acompanhando o giro. O guarda fica parado num vão de 1,2 unidades, sem espaço para passar ao lado: aproxime-se para atraí-lo, recue e contorne-o antes de atravessar o vão.
 
@@ -24,7 +24,7 @@ O desafio conecta cinco setores alternando passagens superiores e inferiores. Re
 - Pisos: `SlowZone`, com multiplicador de velocidade. Não acumulam penalidades: vale a redução mais forte sob o centro do personagem.
 - Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Um teste de colisão antes do movimento impede atravessar paredes. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
 - `GameController`: fases, transições, recordes, mensagens e controle do relógio.
-- `Interface`: Canvas, HUD, dicas e telas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v5, desafio v5, devido à redução de velocidade), preservando o desbloqueio do desafio.
+- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé apenas com controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v5, desafio v5, devido à redução de velocidade), preservando o desbloqueio do desafio.
 
 Paredes usam a camada `CourseWalls` (8). Ao adicionar uma parede, use essa camada para os inimigos enxergarem e respeitarem a colisão. Paredes precisam de `BoxCollider2D` sem trigger.
 
@@ -58,3 +58,10 @@ A primeira divisória do tutorial foi reposicionada de x=-6 para x=-6,1, mantend
 ## Créditos
 
 Os conceitos de objetos, componentes, física, scripts, triggers e interface seguem o tutorial da disciplina. Código e gráficos geométricos foram produzidos com apoio do Codex/OpenAI. Revise e compreenda os scripts antes da entrega e siga as regras da disciplina. Não foram usados projetos de colegas nem assets externos de jogos comerciais.
+
+
+## Interface no navegador
+
+O template WebGL mantém o canvas posicionado dentro da área visível da janela, sem o tamanho mínimo implícito do antigo contêiner Grid. Isso permite reduzir a altura ou a largura da janela sem cortar o rodapé; `CanvasScaler` e `CameraFit` continuam ajustando a interface e a arena.
+
+O tutorial tem seis dicas. A primeira explica que tocar em obstáculos móveis encerra a tentativa; o guarda é descrito pelo comportamento de perseguição, sem instruir a manobra para passar. O segundo bloco deslizante, junto à passagem inferior, não mostra popup. A pontuação continua com o mesmo valor anterior: 1100 pela fuga mais 10 por segundo restante, arredondado para cima.

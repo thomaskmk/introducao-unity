@@ -22,11 +22,5 @@ namespace ObstacleCourse
             foreach (var enemy in enemies) enemy.ResetEnemy();
             foreach (var trap in traps) trap.Refresh();
         }
-
-        public string Hint(Vector2 position)
-        {
-            return tutorial ? "Encontre a saída. As dicas aparecem ao se aproximar dos perigos."
-                : "Fuja antes do tempo acabar. Um impacto encerra a tentativa.";
-        }
     }
 }

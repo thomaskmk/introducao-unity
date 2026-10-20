@@ -2,14 +2,14 @@
 
 Protótipo de um jogo 2D visto de cima, desenvolvido para a disciplina de Jogos e Interação do Insper com **Unity 6.3 LTS (6000.3.26f1)** e o modelo Universal 2D.
 
-Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite os obstáculos móveis e o perseguidor. Cada tentativa tem uma vida, sem itens de recuperação.
+Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite os obstáculos móveis e o perseguidor. Encostar em um perigo encerra a tentativa.
 
 ## Duas fases
 
 - **Tutorial (90 segundos):** apresenta blocos móveis, barra giratória, pêndulo, armadilha cíclica, piso lento e um guarda. Dicas explicativas aparecem por proximidade e apontam para o obstáculo, uma de cada vez. No primeiro bloco, passar por cima dá mais margem; por baixo encurta o caminho e exige esperar a abertura. O guarda ocupa a única saída do último setor: atraia-o e contorne-o.
 - **Desafio (38 segundos):** cinco setores em sequência ocupam toda a arena. O percurso reúne bloco deslizante, pistão vertical, barra giratória, pêndulo, três armadilhas, dois pisos lentos e **três inimigos**. Não há rota segura alternativa nem placas explicativas.
 - Velocidade do personagem: **4,5 unidades/s**, 10% menor que na versão anterior. Os recordes usam a versão 5 para separar tentativas com velocidades diferentes.
-- **Uma vida por tentativa, sem vida extra.** Um impacto encerra a partida. Reiniciar restaura o tempo, os obstáculos e os inimigos da fase atual.
+- **Um impacto encerra a tentativa.** Não há contador de vidas. Reiniciar restaura o tempo, os obstáculos e os inimigos da fase atual.
 - Terminar o tutorial libera o desafio, inclusive pelo menu em visitas seguintes no mesmo navegador. Recordes são separados por fase e versão do percurso, preservando o desbloqueio.
 - Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle; o controle ainda precisa de teste com dispositivo físico.
 - Build WebGL com carregamento e botão de tela cheia.

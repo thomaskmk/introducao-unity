@@ -47,7 +47,7 @@ namespace ObstacleCourse.Tests
             Assert.AreEqual(RunState.Lost,game.Session.State);
             Assert.IsTrue(game.hud.overlay.activeSelf);
             game.StartRun(); yield return null;
-            Assert.AreEqual(1,game.Session.Lives);
+            Assert.AreEqual(RunState.Playing,game.Session.State);
             Assert.Greater(game.Session.Remaining,89);
             Assert.Less(Vector2.Distance(game.player.Position,game.player.spawn),.01f);
             Assert.IsFalse(game.hud.overlay.activeSelf);
@@ -68,10 +68,9 @@ namespace ObstacleCourse.Tests
             float deadline=Time.realtimeSinceStartup+2;
             while(game.IsPlaying && Time.realtimeSinceStartup<deadline) yield return null;
             Assert.AreEqual(RunState.Lost,game.Session.State);
-            Assert.AreEqual(0,game.Session.Lives);
             Assert.IsTrue(game.hud.overlay.activeSelf);
             game.StartRun(); yield return null;
-            Assert.AreEqual(1,game.Session.Lives);
+            Assert.AreEqual(RunState.Playing,game.Session.State);
         }
         [UnityTest] public IEnumerator TutorialLowerPassageWorksOnlyWhenBlockLeavesAnOpening()
         {
@@ -86,7 +85,6 @@ namespace ObstacleCourse.Tests
             while(game.IsPlaying && player.position.x<-5.1f && Time.realtimeSinceStartup<deadline) yield return null;
             Assert.IsTrue(game.IsPlaying);
             Assert.Greater(player.position.x,-5.1f,"A passagem inferior deve contornar o topo da parede.");
-            Assert.AreEqual(1,game.Session.Lives);
             game.StartRun();
             obstacle.position=new Vector2(-6,4.65f);
             player.position=new Vector2(-7,3.95f); player.linearVelocity=Vector2.right*5;

@@ -15,7 +15,6 @@ namespace ObstacleCourse
         public bool HasNextLevel => LevelIndex + 1 < levels.Length;
         public bool ChallengeUnlocked => PlayerPrefs.GetInt("ObstacleCourse.ChallengeUnlocked.v2", 0) == 1;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
-        public string Hint => Level.Hint(player.Position);
         private string BestTimeKey => "ObstacleCourse.BestTime.v" + Level.layoutVersion + "." + LevelIndex;
         private RunState displayedState = (RunState)(-1);
 
@@ -66,7 +65,7 @@ namespace ObstacleCourse
             Level.ResetLevel();
             Physics2D.SyncTransforms();
             PresentState();
-            Debug.Log($"PARTIDA: fase {LevelIndex + 1} — início — {Session.Duration}s, {Session.Lives} vida.");
+            Debug.Log($"PARTIDA: fase {LevelIndex + 1} — início — {Session.Duration}s.");
         }
         public void ReturnToMenu()
         {
@@ -85,7 +84,7 @@ namespace ObstacleCourse
         {
             if (Session.TakeDamage())
             {
-                Debug.Log("PARTIDA: dano — vidas: " + Session.Lives);
+                Debug.Log("PARTIDA: tentativa encerrada por contato com um perigo.");
             }
             if (Session.State != displayedState) PresentState();
         }
@@ -104,7 +103,7 @@ namespace ObstacleCourse
             Time.timeScale = IsPlaying ? 1 : 0;
             hud.ShowState(this);
             if (Session.State == RunState.Won || Session.State == RunState.Lost)
-                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; vidas: {Session.Lives}; pontos: {Session.Score}");
+                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; pontos: {Session.Score}");
         }
         private void OnApplicationFocus(bool focused)
         {

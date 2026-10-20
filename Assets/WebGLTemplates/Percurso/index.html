@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{{ PRODUCT_NAME }}}</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101c2b;color:#eaf2f8;font-family:Arial,sans-serif}#frame{width:100%;height:100%;display:grid;place-items:center}canvas{width:100%;height:100%;display:block;outline:none}#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:#101c2b}#loading strong{font-size:22px;letter-spacing:2px}progress{width:280px;height:8px;accent-color:#68e6c1}#message{font-size:14px;color:#a5b7c7;max-width:85%;text-align:center}#fullscreen{position:fixed;right:12px;bottom:10px;border:1px solid #52677c;border-radius:5px;background:#172a3a;color:#eaf2f8;padding:6px 9px;font-size:11px;cursor:pointer;opacity:.8}#fullscreen:hover{opacity:1}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101c2b;color:#eaf2f8;font-family:Arial,sans-serif}#frame{position:fixed;inset:0;overflow:hidden}canvas{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;display:block;outline:none}#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:#101c2b}#loading strong{font-size:22px;letter-spacing:2px}progress{width:280px;height:8px;accent-color:#68e6c1}#message{font-size:14px;color:#a5b7c7;max-width:85%;text-align:center}#fullscreen{position:fixed;right:12px;bottom:10px;border:1px solid #52677c;border-radius:5px;background:#172a3a;color:#eaf2f8;padding:6px 9px;font-size:11px;cursor:pointer;opacity:.8}#fullscreen:hover{opacity:1}
 </style>
 </head>
 <body>

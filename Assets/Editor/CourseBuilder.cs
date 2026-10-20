@@ -291,19 +291,15 @@ public static class CourseBuilder
         Panel("Cabeçalho",root,new Vector2(800,835),new Vector2(1520,90),Hex("1D3043"));
         Label("Nome",root,"CONTRA O RELÓGIO",new Vector2(250,850),new Vector2(380,30),25,Color.white,TextAnchor.MiddleLeft,true);
         hud.status=Label("Estado",root,"PERCURSO 01",new Vector2(250,817),new Vector2(380,25),15,Mint,TextAnchor.MiddleLeft);
-        Label("Tempo legenda",root,"TEMPO",new Vector2(910,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
-        hud.timer=Label("Tempo",root,"60s",new Vector2(910,821),new Vector2(130,40),32,Color.white,TextAnchor.MiddleCenter,true);
-        Label("Vidas legenda",root,"VIDAS",new Vector2(1080,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
-        hud.lives=Label("Vidas",root,"1",new Vector2(1080,821),new Vector2(130,40),28,Color.white,TextAnchor.MiddleCenter,true);
+        Label("Tempo legenda",root,"TEMPO",new Vector2(1080,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
+        hud.timer=Label("Tempo",root,"60s",new Vector2(1080,821),new Vector2(130,40),32,Color.white,TextAnchor.MiddleCenter,true);
         hud.best=Label("Recorde",root,"MELHOR  —",new Vector2(1260,836),new Vector2(200,30),16,Muted,TextAnchor.MiddleCenter);
         var pause=ButtonAt("Pausar",root,"PAUSA  II",new Vector2(1450,835),new Vector2(150,50),Hex("324B61"),Color.white);
         UnityEventTools.AddPersistentListener(pause.onClick,game.TogglePause);
         Panel("Trilho do tempo",root,new Vector2(800,777),new Vector2(1520,4),Hex("2B4054"));
         hud.timerFill=Panel("Barra do tempo",root,new Vector2(800,777),new Vector2(1520,4),Mint);
         hud.timerFill.sprite=square; hud.timerFill.type=Image.Type.Filled; hud.timerFill.fillMethod=Image.FillMethod.Horizontal;
-        Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(570,65),new Vector2(1020,30),18,Muted,TextAnchor.MiddleLeft);
-        Label("Objetivo",root,"UM IMPACTO ENCERRA A TENTATIVA",new Vector2(1270,65),new Vector2(530,30),15,Mint,TextAnchor.MiddleRight);
-        hud.hint=Label("Dica",root,"",new Vector2(800,117),new Vector2(1480,42),18,Muted,TextAnchor.MiddleCenter);
+        Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(800,100),new Vector2(1480,30),18,Muted,TextAnchor.MiddleCenter);
         BuildTutorialGuide(game, hud, root);
         var shade=Panel("Telas da partida",root,new Vector2(800,450),new Vector2(2000,1400),new Color(.025f,.05f,.08f,.91f));
         shade.raycastTarget=true; hud.overlay=shade.gameObject;
@@ -346,7 +342,7 @@ public static class CourseBuilder
         var level = game.levels[0];
         guide.tips = new[] {
             Tip(new Rect(-14.85f,-4.9f,8.35f,5), level.rotors[0].transform, new Vector2(-10.7f,2.6f),
-                "Use WASD ou as setas. Espere a abertura à direita do eixo e acompanhe o giro para passar."),
+                "Encostar nos obstáculos móveis encerra a tentativa. Observe o movimento antes de avançar."),
             Tip(new Rect(-14.85f,2,9.15f,4), level.blocks[0].transform, new Vector2(-10.7f,0),
                 "Por cima do portão é mais seguro. Por baixo, o atalho é mais rápido, mas exige acertar o momento."),
             Tip(new Rect(-5.7f,2.25f,8.3f,3.75f), level.rotors[1].transform, new Vector2(-1.45f,-2.7f),
@@ -355,10 +351,8 @@ public static class CourseBuilder
                 "Este piso dá choque. Passe sem corrente; no alerta amarelo, espere. O piso vermelho é fatal."),
             Tip(new Rect(-5.7f,-3.3f,8.3f,2.7f), level.slowZones[0].transform, new Vector2(-1.45f,1.25f),
                 "O piso molhado deixa você mais lento. Contorne a água para ganhar tempo."),
-            Tip(new Rect(-5.7f,-6,12.1f,2.7f), level.blocks[1].transform, new Vector2(5.1f,-1.6f),
-                "A passagem continua por baixo da parede. Espere o portão se afastar antes de contorná-la."),
             Tip(new Rect(7,-2.8f,7.85f,4.9f), level.enemies[0].transform, new Vector2(10.8f,4.6f),
-                "Aproxime-se para atrair o guarda. Recue, dê a volta nele e use a passagem que ele deixou livre.")
+                "O guarda começa a perseguir quando você se aproxima. Se ele alcançar você, a fuga termina.")
         };
     }
     private static TutorialGuide.Tip Tip(Rect area, Transform target, Vector2 cardPosition, string message)

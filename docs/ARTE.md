@@ -94,3 +94,12 @@ Ferramenta: imagegen integrado. Referência de estilo: Assets/Art/Prison/Generat
 - 23 testes PlayMode aprovados. Incluem sete regiões de dicas, apontamento do alvo, caixa fora do personagem, saída da região, pausa, reinício e troca de fase; também verificam símbolos e texto dos três estados, descargas pausadas e travessias dos portões na velocidade real do personagem.
 - A grade mantém as mesmas durações e a mesma regra de dano: o aviso amarelo ainda não causa dano; a corrente vermelha causa dano inclusive ao personagem já dentro da área.
 - Conferência WebGL final: primeiro portão atravessado com teclado, dica seguinte reposicionada para manter o portão e a grade elétrica visíveis, estados seguro/aviso/ativo presentes simultaneamente no desafio e console sem erros ou avisos. O teste de dicas foi repetido após o ajuste de posição e antecipação do alerta.
+
+
+## Limpeza da interface
+
+O cabeçalho agora exibe tempo, recorde e pausa. Rodapé apenas com controles; não há mensagens de objetivo ou contador de vidas em menus, resultados ou durante a partida. O conceito foi removido de RunSession: um contato perigoso encerra a tentativa diretamente, mantendo os valores de pontuação anteriores.
+
+O tutorial usa seis dicas: o primeiro portão explica a consequência de um impacto; o guarda é descrito por proximidade, perseguição e captura. O bloco móvel da passagem inferior não tem popup. O template WebGL ocupa exatamente a janela disponível, evitando o corte de rodapé causado pelo tamanho mínimo do antigo Grid.
+
+Validação desta revisão: 8 testes EditMode e 23 PlayMode aprovados; 79 registros de física/configuração iguais aos da cena anterior. No navegador, a falha foi reproduzida em 1280×560 (canvas de 720 pixels de altura) e corrigida: o canvas passou a medir exatamente 1280×560. Conferência adicional em 900×700, tamanho padrão e tela cheia, com rodapé completo e console sem erros/avisos.

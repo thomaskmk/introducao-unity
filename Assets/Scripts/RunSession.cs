@@ -11,21 +11,18 @@ namespace ObstacleCourse
         public float Duration { get; }
         public float Remaining { get; private set; }
         public float Elapsed => Duration - Remaining;
-        public int Lives { get; private set; }
         public string EndReason { get; private set; } = "";
-        public int Score => State == RunState.Won ? 1000 + (int)Math.Ceiling(Remaining * 10) + Lives * 100 : 0;
+        public int Score => State == RunState.Won ? 1100 + (int)Math.Ceiling(Remaining * 10) : 0;
 
         public RunSession(float duration)
         {
             if (duration <= 0) throw new ArgumentOutOfRangeException();
             Duration = Remaining = duration;
-            Lives = 1;
         }
 
         public void Begin()
         {
             Remaining = Duration;
-            Lives = 1;
             EndReason = "";
             State = RunState.Playing;
         }
@@ -40,8 +37,7 @@ namespace ObstacleCourse
         public bool TakeDamage()
         {
             if (State != RunState.Playing) return false;
-            Lives = Math.Max(0, Lives - 1);
-            if (Lives == 0) Lose("Você atingiu um perigo.");
+            Lose("Você atingiu um perigo.");
             return true;
         }
 
