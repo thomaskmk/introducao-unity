@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class CourseIntegrationTests
     {
         private GameController game;
-        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v5.0", "ObstacleCourse.BestTime.v5.1" };
+        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v6.0", "ObstacleCourse.BestTime.v6.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] saved = new float[3];
         [UnitySetUp] public IEnumerator LoadCourse()

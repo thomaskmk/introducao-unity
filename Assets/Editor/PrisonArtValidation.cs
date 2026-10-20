@@ -36,6 +36,14 @@ public static class PrisonArtValidation
         {
             foreach (var collider in root.GetComponentsInChildren<Collider2D>(true))
             {
+                if (collider is CapsuleCollider2D capsule)
+                {
+                    rows.Add("COLLIDER|" + Path(capsule.transform) + "|" + Pose(capsule.transform) +
+                        "|" + capsule.enabled + "|" + capsule.isTrigger + "|" + Value(capsule.offset) + "|" + Value(capsule.size) +
+                        "|Capsule:" + capsule.direction + "|" + Value(capsule.density) +
+                        "|" + AssetDatabase.GetAssetPath(capsule.sharedMaterial));
+                    continue;
+                }
                 if (!(collider is BoxCollider2D box))
                     throw new InvalidOperationException("Adicione a captura do novo tipo de collider: " + collider.GetType());
                 rows.Add("COLLIDER|" + Path(box.transform) + "|" + Pose(box.transform) +

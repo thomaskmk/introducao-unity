@@ -56,7 +56,7 @@ public static class CourseBuilder
         var p=Box("Player",null,new Vector2(-13,-4.5f),new Vector2(.7f,.7f),Mint,5);
         var body=p.AddComponent<Rigidbody2D>(); body.gravityScale=0; body.freezeRotation=true;
         body.interpolation=RigidbodyInterpolation2D.Interpolate; body.collisionDetectionMode=CollisionDetectionMode2D.Continuous;
-        var playerCollider=p.AddComponent<BoxCollider2D>();
+        var playerCollider=CharacterCollider(p,new Vector2(.46f,.82f));
         var material=AssetDatabase.LoadAssetAtPath<PhysicsMaterial2D>("Assets/Art/Prototype/NoFriction.physicsMaterial2D");
         if(material==null) {
             material=new PhysicsMaterial2D("Sem atrito"); material.friction=0; material.bounciness=0;
@@ -110,7 +110,7 @@ public static class CourseBuilder
         level.title = tutorial ? "Tutorial" : "Desafio";
         level.tutorial = tutorial;
         level.timeLimit = tutorial ? 90 : 38;
-        level.layoutVersion = 5; // New records: movement is now 10% slower.
+        level.layoutVersion = 6; // Character hitboxes now follow the illustrated bodies.
         level.spawn = new Vector2(-13,-4.5f);
         var arena = root.transform;
         Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
@@ -237,12 +237,24 @@ public static class CourseBuilder
     {
         var go=Box("Inimigo perseguidor",parent,a,new Vector2(.9f,.9f),Hex("BF54A6"),4);
         var body=go.AddComponent<Rigidbody2D>(); body.bodyType=RigidbodyType2D.Kinematic; body.interpolation=RigidbodyInterpolation2D.Interpolate;
-        go.AddComponent<BoxCollider2D>().isTrigger=true;
+        CharacterCollider(go,new Vector2(.5f,.84f)).isTrigger=true;
         var enemy=go.AddComponent<ChaserEnemy>(); enemy.game=game; enemy.pointA=a; enemy.pointB=b;
         enemy.territory=territory; enemy.chaseSpeed=speed; enemy.walls=1<<8;
         enemy.label=WorldText("?",parent,a,.1f,Color.white,6);
         enemy.label.transform.SetParent(go.transform,true);
         return enemy;
+    }
+
+    private static CapsuleCollider2D CharacterCollider(GameObject character,Vector2 worldSize)
+    {
+        // Fixed for every animation frame. The artwork's pivot is below its center;
+        // cover the body with a small inset instead of the old square around the feet.
+        var collider=character.AddComponent<CapsuleCollider2D>();
+        var scale=character.transform.lossyScale;
+        collider.direction=CapsuleDirection2D.Vertical;
+        collider.size=new Vector2(worldSize.x/scale.x,worldSize.y/scale.y);
+        collider.offset=new Vector2(0,.2f/scale.y);
+        return collider;
     }
 
     private static GameObject Box(string name,Transform parent,Vector2 position,Vector2 size,Color color,int order)

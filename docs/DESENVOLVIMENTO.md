@@ -17,14 +17,14 @@ O desafio conecta cinco setores alternando passagens superiores e inferiores. Re
 ## Onde editar
 
 - `Fase 01 — Tutorial` e `Fase 02 — Desafio`: objetos separados na Hierarchy. Cada raiz possui `CourseLevel`, com duração, posição inicial e referências dos elementos.
-- `Player`: `Rigidbody2D`, gravidade zero e rotação travada. `Speed` controla a velocidade: 4,5 unidades/s (redução de 10% em relação à versão anterior).
+- `Player`: `Rigidbody2D`, gravidade zero e rotação travada. Cápsula vertical fixa de 0,46 × 0,82 unidades, centro 0,2 acima da raiz, ajustada ao corpo desenhado. `Speed` controla a velocidade: 4,5 unidades/s (redução de 10% em relação à versão anterior).
 - Blocos e pistão: `PatrolHazard`, com pontos A/B, velocidade e deslocamento inicial. Pontos verticais produzem o pistão do desafio.
 - Barra giratória e pêndulo: `RotatingHazard`, com ângulo inicial, velocidade angular, opção `Oscillates`, amplitude e período. O Rigidbody2D fica na raiz sem escala; a barra filha contém o trigger. A rotação segue o relógio da fase, portanto pausa e reinício mantêm a sincronização.
 - Armadilhas: `CycleTrap`, com tempo apagado, aviso, tempo ativo e deslocamento inicial. O amarelo é aviso e ainda não causa dano. Vermelho causa dano mesmo se o jogador já estiver parado dentro da área. No tutorial, o texto reforça o estado além da cor.
 - Pisos: `SlowZone`, com multiplicador de velocidade. Não acumulam penalidades: vale a redução mais forte sob o centro do personagem.
-- Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Um teste de colisão antes do movimento impede atravessar paredes. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
+- Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Uma cápsula vertical de 0,50 × 0,84 unidades, centro 0,2 acima da raiz, define o contato. O movimento usa Collider2D.Cast com essa mesma cápsula e uma margem de 0,02 para respeitar as paredes, inclusive a posição deslocada do collider. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
 - `GameController`: fases, transições, recordes, mensagens e controle do relógio.
-- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé apenas com controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v5, desafio v5, devido à redução de velocidade), preservando o desbloqueio do desafio.
+- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé apenas com controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v6, desafio v6, devido ao ajuste das hitboxes), preservando o desbloqueio do desafio.
 
 Paredes usam a camada `CourseWalls` (8). Ao adicionar uma parede, use essa camada para os inimigos enxergarem e respeitarem a colisão. Paredes precisam de `BoxCollider2D` sem trigger.
 
@@ -47,13 +47,13 @@ bash scripts/package-web.sh
 
 Relatórios ficam em `TestResults/`. A saída WebGL fica em `Builds/WebGL/` e o pacote em `Builds/percurso-webgl.zip`. Teste em navegador com `python3 -m http.server 8765 --bind 127.0.0.1 --directory Builds/WebGL`.
 
-Os testes exercitam derrota no primeiro impacto, colisões, transição/reinício de fase, estados da armadilha, piso lento, perseguição, limites, pausa, impacto da barra giratória e reversão do pêndulo, bloqueio do vão pelo guarda, percurso de atração e contorno, bloqueio dos quatro desvios laterais, janelas seguras e perigosas das duas barras, e conectividade dos cinco setores do desafio. A avaliação de dificuldade continua dependendo de partidas reais.
+Os testes exercitam derrota no primeiro impacto, colisões, transição/reinício de fase, estados da armadilha, piso lento, perseguição, limites, pausa, impacto da barra giratória e reversão do pêndulo, bloqueio do vão pelo guarda, percurso de atração e contorno, bloqueio dos quatro desvios laterais, janelas seguras e perigosas das duas barras, e conectividade dos cinco setores do desafio. Os testes de personagens também conferem os quadros de animação, o espaço lateral sem colisão invisível, o contato na cabeça e a distância do guarda às paredes. A avaliação de dificuldade continua dependendo de partidas reais.
 
 No itch.io, use o tipo HTML e marque o ZIP para ser jogado no navegador. O ZIP precisa ter `index.html` na raiz. A publicação depende do acesso à conta do autor.
 
 ## Verificação visual
 
-A primeira divisória do tutorial foi reposicionada de x=-6 para x=-6,1, mantendo o topo e a passagem inferior do bloco. Na versão WebGL verificada, a parede voltou a aparecer com o SpriteRenderer e material padrão do projeto; sua colisão acompanha a mesma posição. As duas fases devem continuar sendo verificadas visualmente no navegador após mudanças na cena. A ampliação da arte mantém os 79 registros de física e regras da versão aprovada: `PrisonArtValidation.RebuildPreservingGameplay` reconstrói a cena comparando os registros antes/depois e interrompe em caso de diferença.
+A primeira divisória do tutorial foi reposicionada de x=-6 para x=-6,1, mantendo o topo e a passagem inferior do bloco. Na versão WebGL verificada, a parede voltou a aparecer com o SpriteRenderer e material padrão do projeto; sua colisão acompanha a mesma posição. As duas fases devem continuar sendo verificadas visualmente no navegador após mudanças na cena. A auditoria registra 79 entradas de física e regras (incluindo caixas e cápsulas): `PrisonArtValidation.RebuildPreservingGameplay` reconstrói a cena comparando os registros antes/depois e interrompe em caso de diferença.
 
 ## Créditos
 

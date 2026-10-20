@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ObstacleCourse
 {
-    [RequireComponent(typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(SpriteRenderer))]
+    [RequireComponent(typeof(Rigidbody2D), typeof(CapsuleCollider2D), typeof(SpriteRenderer))]
     public sealed class ChaserEnemy : MonoBehaviour
     {
         public GameController game;
@@ -18,14 +18,18 @@ namespace ObstacleCourse
         private Rigidbody2D body;
         private SpriteRenderer visual;
         private bool towardB = true;
-        private Vector2 hitSize;
+        private CapsuleCollider2D hitbox;
+        private ContactFilter2D wallFilter;
+        private readonly RaycastHit2D[] wallHits = new RaycastHit2D[4];
 
         private void Awake() { Prepare(); }
         private void Prepare()
         {
             if (body == null) body = GetComponent<Rigidbody2D>();
             if (visual == null) visual = GetComponent<SpriteRenderer>();
-            hitSize = Vector2.Scale(GetComponent<BoxCollider2D>().size, transform.lossyScale);
+            if (hitbox == null) hitbox = GetComponent<CapsuleCollider2D>();
+            wallFilter.SetLayerMask(walls);
+            wallFilter.useTriggers = false;
         }
         private void FixedUpdate()
         {
@@ -41,13 +45,15 @@ namespace ObstacleCourse
             next.x = Mathf.Clamp(next.x, territory.xMin, territory.xMax);
             next.y = Mathf.Clamp(next.y, territory.yMin, territory.yMax);
 
-            // A patrulha também respeita paredes adicionadas pelo editor.
+            // Cast the actual collider, including its offset and rounded ends.
+            // Damage and wall avoidance must use the same shape.
             Vector2 delta = next - body.position;
             float distance = delta.magnitude;
             if (distance > 0)
             {
-                var hit = Physics2D.BoxCast(body.position, hitSize, 0, delta / distance, distance + .02f, walls);
-                if (hit) distance = Mathf.Max(0, hit.distance - .02f);
+                int count = hitbox.Cast(delta / distance, wallFilter, wallHits, distance + .02f);
+                for (int i = 0; i < count; i++)
+                    distance = Mathf.Min(distance, Mathf.Max(0, wallHits[i].distance - .02f));
                 body.MovePosition(body.position + delta.normalized * distance);
             }
             visual.color = IsChasing ? new Color(1, .2f, .44f) : new Color(.75f, .33f, .65f);

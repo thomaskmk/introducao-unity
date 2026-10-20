@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class NewMechanicsTests
     {
         private GameController game;
-        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v5.0", "ObstacleCourse.BestTime.v5.1" };
+        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v6.0", "ObstacleCourse.BestTime.v6.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] values = new float[3];
         [UnitySetUp] public IEnumerator Load()
@@ -159,15 +159,18 @@ namespace ObstacleCourse.Tests
         [UnityTest] public IEnumerator TrapWarnsBeforeDamageAndHurtsPlayerAlreadyInside()
         {
             var trap=game.Level.traps[0];
+            // Test the floor cycle independently of the pendulum above it.
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger && collider.gameObject!=trap.gameObject) collider.enabled=false;
             Assert.AreEqual(TrapPhase.Safe,trap.PhaseAt(0));
             Assert.AreEqual(TrapPhase.Warning,trap.PhaseAt(trap.safeSeconds));
             Assert.AreEqual(TrapPhase.Active,trap.PhaseAt(trap.safeSeconds+trap.warningSeconds));
             Assert.AreEqual(TrapPhase.Safe,trap.PhaseAt(trap.safeSeconds+trap.warningSeconds+trap.activeSeconds));
-            Place(trap.transform.position); yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+            Place(trap.transform.position); yield return new WaitForSecondsRealtime(.06f);
             Assert.AreEqual(RunState.Playing,game.Session.State);
-            game.Session.Tick(trap.safeSeconds); yield return new WaitForFixedUpdate();
+            game.Session.Tick(trap.safeSeconds); yield return new WaitForSecondsRealtime(.06f);
             Assert.AreEqual(RunState.Playing,game.Session.State);
-            game.Session.Tick(trap.warningSeconds); yield return new WaitForFixedUpdate(); yield return null;
+            game.Session.Tick(trap.warningSeconds); yield return new WaitForSecondsRealtime(.06f);
             Assert.AreEqual(RunState.Lost,game.Session.State);
         }
         [UnityTest] public IEnumerator SlowFloorChangesSpeedAndClearsOnExitAndRestart()
@@ -207,10 +210,10 @@ namespace ObstacleCourse.Tests
             {
                 Assert.IsTrue(game.IsPlaying, "Enemy crossed the wall and hit the player.");
                 yield return new WaitForFixedUpdate();
-                Assert.LessOrEqual(enemy.GetComponent<Rigidbody2D>().position.x,-6.84f,"Enemy crossed wall during patrol.");
+                Assert.LessOrEqual(enemy.GetComponent<Collider2D>().bounds.max.x,-6.5f,"Enemy crossed wall during patrol.");
             }
             Assert.IsFalse(enemy.IsChasing);
-            Assert.LessOrEqual(enemy.GetComponent<Rigidbody2D>().position.x,-6.84f);
+            Assert.That(enemy.GetComponent<Collider2D>().bounds.max.x,Is.InRange(-6.54f,-6.5f));
             Assert.Greater(enemy.GetComponent<Rigidbody2D>().position.x,-7.2f);
         }
         [UnityTest] public IEnumerator ProgressionAndRetryKeepCorrectLevelAndRestartAttempt()
@@ -291,7 +294,8 @@ namespace ObstacleCourse.Tests
                     body.linearVelocity=Vector2.up*5;
                     yield return new WaitForFixedUpdate();
                 }
-                Assert.That(body.position.y,Is.InRange(crossing.y-.6f,crossing.y-.5f),
+                Assert.That(game.player.GetComponent<Collider2D>().bounds.max.y,
+                    Is.InRange(crossing.y-.2f,crossing.y-.16f),
                     "A grade deve bloquear o desvio lateral em "+crossing);
                 body.linearVelocity=Vector2.zero;
             }
@@ -345,7 +349,8 @@ namespace ObstacleCourse.Tests
             game.player.enabled=false;
             var body=game.player.GetComponent<Rigidbody2D>();
             // Mesmo com o guarda parado, não há espaço para passar ao lado dele.
-            foreach(float x in new[] {10.65f,10.8f,10.95f})
+            // Include both wall edges, not only the middle of the gap.
+            foreach(float x in new[] {10.44f,10.6f,10.8f,11f,11.16f})
             {
                 game.StartRun(); Place(new Vector2(x,1.2f)); body.linearVelocity=Vector2.up*5;
                 float deadline=Time.realtimeSinceStartup+2;

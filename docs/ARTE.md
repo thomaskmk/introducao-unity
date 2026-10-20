@@ -1,6 +1,6 @@
 # Arte — fuga da prisão
 
-As duas fases usam o mesmo conjunto de pixel art: piso de concreto, grades, prisioneiro, guardas, máquinas e pisos especiais. O layout aprovado em ed4852f foi preservado. Na revisão das dicas e sinalização, a auditoria dos 79 registros contra f9e547c encontrou apenas as alterações previstas: velocidade do jogador de 5 para 4,5 e versão de recordes de 4 para 5. Posições, rotações, escalas, colliders, corpos físicos, tempos dos perigos, patrulhas e composição das fases foram preservados.
+As duas fases usam o mesmo conjunto de pixel art: piso de concreto, grades, prisioneiro, guardas, máquinas e pisos especiais. O layout aprovado em ed4852f foi preservado. Na revisão das dicas e sinalização, a auditoria dos 79 registros contra f9e547c encontrou apenas as alterações previstas: velocidade do jogador de 5 para 4,5 e versão de recordes de 4 para 5. Naquela revisão, posições, rotações, escalas, colliders, corpos físicos, tempos dos perigos, patrulhas e composição das fases foram preservados. A revisão posterior das hitboxes está descrita abaixo.
 
 ## Origem das artes
 
@@ -18,7 +18,7 @@ PrisonTrapVisual usa o mesmo relógio da armadilha. Faixas amarelas e pretas del
 
 A textura azul representa uma área alagada, com limite visual exatamente no contorno do piso lento. A saída tem concreto verde e marcação de borda dentro da área original. Os nomes dos portões e as placas explicativas fixas foram removidos. TutorialGuide mostra uma explicação por aproximação, aponta para o elemento correspondente, evita cobrir o personagem e desaparece fora da região, na pausa, no menu e no desafio. Não adiciona colliders nem interrompe o relógio.
 
-Os sprites usam filtro Point, sem mipmaps ou compressão. Os personagens gerados são recortados por faixas transparentes; não se presume que a folha tenha células uniformes. O desenho dos personagens ocupa espaço acima dos pés, como em um jogo visto de cima; as colisões originais de 0,7 para o jogador e 0,9 para os guardas permanecem iguais.
+Os sprites usam filtro Point, sem mipmaps ou compressão. Os personagens gerados são recortados por faixas transparentes; não se presume que a folha tenha células uniformes. O pivô dos personagens fica abaixo do centro do desenho. As antigas caixas de 0,7 e 0,9 ultrapassavam as laterais e não cobriam a cabeça. Agora as colisões seguem o corpo inteiro: cápsula vertical de 0,46 × 0,82 para o jogador e 0,50 × 0,84 para os guardas, ambas centradas 0,2 acima da raiz. As cápsulas ficam ligeiramente para dentro da arte e não variam com os quadros de animação.
 
 ## Reconstrução e conferência
 
@@ -103,3 +103,12 @@ O cabeçalho agora exibe tempo, recorde e pausa. Rodapé apenas com controles; n
 O tutorial usa seis dicas: o primeiro portão explica a consequência de um impacto; o guarda é descrito por proximidade, perseguição e captura. O bloco móvel da passagem inferior não tem popup. O template WebGL ocupa exatamente a janela disponível, evitando o corte de rodapé causado pelo tamanho mínimo do antigo Grid.
 
 Validação desta revisão: 8 testes EditMode e 23 PlayMode aprovados; 79 registros de física/configuração iguais aos da cena anterior. No navegador, a falha foi reproduzida em 1280×560 (canvas de 720 pixels de altura) e corrigida: o canvas passou a medir exatamente 1280×560. Conferência adicional em 900×700, tamanho padrão e tela cheia, com rodapé completo e console sem erros/avisos.
+
+
+## Revisão das hitboxes
+
+As cinco hitboxes de personagens foram substituídas por cápsulas ajustadas aos sprites. O guarda testa paredes com o próprio collider, incluindo sua posição e formato, em vez de uma caixa separada. Cenário, obstáculos, posições, velocidades e tempos permanecem iguais. Os recordes passam à versão 6; o desbloqueio do desafio é preservado.
+
+Validação: 8 testes EditMode e 27 PlayMode aprovados. Os quatro testes novos verificam os limites dos sprites em todos os quadros, espaço lateral seguro seguido de contato fatal, impacto na cabeça e a aproximação do guarda a paredes por cima e por baixo. Os testes existentes continuam cobrindo o atalho inferior, as janelas dos portões, as cinco linhas do vão do guarda (incluindo as bordas) e o percurso de atração e contorno.
+
+Auditoria: os 79 registros mantêm cenário, obstáculos e regras; diferenças contra a versão anterior restritas às cinco hitboxes e às duas versões de recordes. Uma nova reconstrução produziu 79 registros idênticos. WebGL conferido com teclado: primeiro portão, passagem superior, pausa e derrota por contato; console sem erros ou avisos.
