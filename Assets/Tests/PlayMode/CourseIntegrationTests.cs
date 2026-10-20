@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class CourseIntegrationTests
     {
         private GameController game;
-        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v3.0", "ObstacleCourse.BestTime.v4.1" };
+        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v4.0", "ObstacleCourse.BestTime.v4.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] saved = new float[3];
         [UnitySetUp] public IEnumerator LoadCourse()
@@ -56,7 +56,7 @@ namespace ObstacleCourse.Tests
         {
             game.StartRun(); game.player.enabled=false;
             var body=game.player.GetComponent<Rigidbody2D>();
-            body.position=new Vector2(-8,0); body.linearVelocity=new Vector2(5,0);
+            body.position=new Vector2(-8,-1.8f); body.linearVelocity=new Vector2(5,0);
             for(int i=0;i<30;i++) yield return new WaitForFixedUpdate();
             Assert.LessOrEqual(body.position.x,-6.7f,"Player crossed the wall.");
             Assert.Greater(body.position.x,-7.1f,"Player never reached the wall.");

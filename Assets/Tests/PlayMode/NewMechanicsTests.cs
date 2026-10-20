@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class NewMechanicsTests
     {
         private GameController game;
-        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v3.0", "ObstacleCourse.BestTime.v4.1" };
+        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v4.0", "ObstacleCourse.BestTime.v4.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] values = new float[3];
         [UnitySetUp] public IEnumerator Load()
@@ -82,10 +82,10 @@ namespace ObstacleCourse.Tests
         {
             var enemy=game.Level.enemies[0];
             enemy.territory=new Rect(-14,-5,28,10);
-            enemy.pointA=new Vector2(-7.2f,0); enemy.pointB=new Vector2(-4,0);
-            enemy.patrolSpeed=5; enemy.ResetEnemy(); Place(new Vector2(-4,0));
+            enemy.pointA=new Vector2(-7.2f,-1.8f); enemy.pointB=new Vector2(-4,-1.8f);
+            enemy.patrolSpeed=5; enemy.ResetEnemy(); Place(new Vector2(-4,-1.8f));
             Physics2D.SyncTransforms();
-            Assert.IsTrue(Physics2D.Linecast(new Vector2(-7.2f,0),new Vector2(-4,0),enemy.walls), "Expected a wall between enemy and player.");
+            Assert.IsTrue(Physics2D.Linecast(enemy.pointA,enemy.pointB,enemy.walls), "Expected a wall between enemy and player.");
             for(int i=0;i<40;i++)
             {
                 Assert.IsTrue(game.IsPlaying, "Enemy crossed the wall and hit the player.");
@@ -155,6 +155,71 @@ namespace ObstacleCourse.Tests
             game.StartRun();
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(rotor.initialAngle,rb.rotation)),.01f);
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(pendulum.initialAngle,pb.rotation)),.01f);
+        }
+        [UnityTest] public IEnumerator TutorialGrillesBlockTheFourLateralBypasses()
+        {
+            // Isolate solid collisions: the bars must stop bypasses even with hazards disabled.
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger) collider.enabled=false;
+            foreach(var enemy in game.Level.enemies) enemy.enabled=false;
+            game.player.enabled=false;
+            var body=game.player.GetComponent<Rigidbody2D>();
+            foreach(var crossing in new[] {
+                new Vector2(-14,-.5f),new Vector2(-8,-.5f),
+                new Vector2(-4.5f,2.8f),new Vector2(1.5f,2.8f) })
+            {
+                game.StartRun(); Place(crossing+Vector2.down*1.5f);
+                for(int i=0;i<30;i++)
+                {
+                    body.linearVelocity=Vector2.up*5;
+                    yield return new WaitForFixedUpdate();
+                }
+                Assert.That(body.position.y,Is.InRange(crossing.y-.6f,crossing.y-.5f),
+                    "A grade deve bloquear o desvio lateral em "+crossing);
+                body.linearVelocity=Vector2.zero;
+            }
+        }
+        [UnityTest] public IEnumerator TutorialRotorsHaveSafeAndUnsafeCrossingWindows()
+        {
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger) collider.enabled=false;
+            foreach(var enemy in game.Level.enemies) enemy.enabled=false;
+            game.player.enabled=false;
+            var body=game.player.GetComponent<Rigidbody2D>();
+            foreach(var rotor in game.Level.rotors)
+            {
+                var hazard=rotor.GetComponentInChildren<BoxCollider2D>();
+                hazard.enabled=true;
+                Vector2 center=rotor.transform.position;
+                Vector2 direction=rotor.oscillates ? Vector2.down : Vector2.up;
+                float cycle=rotor.oscillates ? rotor.period : 360/rotor.degreesPerSecond;
+                int safe=0,unsafeAttempts=0;
+                for(int phase=0;phase<12;phase++)
+                {
+                    game.StartRun(); game.Session.Tick(cycle*phase/12);
+                    rotor.GetComponent<Rigidbody2D>().rotation=rotor.AngleAt(game.Session.Elapsed);
+                    // Follow the arm's movement on the right; the pendulum reverses on either side.
+                    Place(center+Vector2.right*(rotor.oscillates ? -1 : 1.05f)-direction*2.15f);
+                    float deadline=Time.realtimeSinceStartup+2;
+                    while(game.IsPlaying && Vector2.Dot(body.position-center,direction)<2.15f &&
+                        Time.realtimeSinceStartup<deadline)
+                    {
+                        body.linearVelocity=direction*5;
+                        yield return null;
+                    }
+                    body.linearVelocity=Vector2.zero;
+                    if(game.Session.State==RunState.Lost) unsafeAttempts++;
+                    else
+                    {
+                        Assert.GreaterOrEqual(Vector2.Dot(body.position-center,direction),2.15f,
+                            "A travessia ficou presa na grade de "+rotor.name);
+                        safe++;
+                    }
+                }
+                hazard.enabled=false;
+                Assert.Greater(safe,0,rotor.name+" precisa permitir uma travessia no momento certo.");
+                Assert.Greater(unsafeAttempts,0,rotor.name+" precisa oferecer risco na mesma passagem.");
+            }
         }
         [UnityTest] public IEnumerator TutorialGuardBlocksEveryLineThroughTheNarrowExit()
         {

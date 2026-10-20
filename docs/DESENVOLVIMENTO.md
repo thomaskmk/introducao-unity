@@ -10,7 +10,7 @@ WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerd
 
 Cada tentativa começa com uma vida. Um impacto encerra a partida imediatamente; não há vida extra nem invulnerabilidade. Reiniciar reposiciona os inimigos, os obstáculos e o jogador, restaura o relógio e devolve uma vida. Perder no desafio não obriga a repetir o tutorial.
 
-O tutorial tem 90 segundos e o desafio 38. Esses valores devem ser refinados com jogadores. No tutorial, é possível passar por cima ou por baixo do primeiro bloco móvel. A passagem inferior é mais curta e exige sincronizar o movimento com o bloco; ainda é necessário contornar o topo da parede. Uma barra gira continuamente no primeiro setor; um pêndulo oscila no segundo. O guarda fica parado num vão de 1,2 unidades, sem espaço para passar ao lado: aproxime-se para atraí-lo, recue e contorne-o antes de atravessar o vão.
+O tutorial tem 90 segundos e o desafio 38. Esses valores devem ser refinados com jogadores. No tutorial, é possível passar por cima ou por baixo do primeiro bloco móvel. A passagem inferior é mais curta e exige sincronizar o movimento com o bloco; ainda é necessário contornar o topo da parede. Uma barra gira continuamente no primeiro setor; um pêndulo oscila no segundo. Grades laterais conduzem aos vãos dentro do alcance de cada barra: observe o movimento e espere uma janela para atravessar. No braço giratório, avance à direita do eixo, acompanhando o giro. O guarda fica parado num vão de 1,2 unidades, sem espaço para passar ao lado: aproxime-se para atraí-lo, recue e contorne-o antes de atravessar o vão.
 
 O desafio conecta cinco setores alternando passagens superiores e inferiores. Reúne dois obstáculos deslizantes em eixos distintos, barra giratória, pêndulo, três armadilhas cíclicas, dois pisos lentos e três perseguidores. Não há bifurcação segura nem placas explicativas; os estados dos perigos são apresentados pelas cores ensinadas no tutorial. A vitória depende de chegar à área verde antes do tempo acabar, sem sofrer impacto.
 
@@ -24,7 +24,7 @@ O desafio conecta cinco setores alternando passagens superiores e inferiores. Re
 - Pisos: `SlowZone`, com multiplicador de velocidade. Não acumulam penalidades: vale a redução mais forte sob o centro do personagem.
 - Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Um teste de colisão antes do movimento impede atravessar paredes. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
 - `GameController`: fases, transições, recordes, mensagens e controle do relógio.
-- `Interface`: Canvas, HUD, dicas e telas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v3, desafio v4), preservando o desbloqueio do desafio.
+- `Interface`: Canvas, HUD, dicas e telas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v4, desafio v4), preservando o desbloqueio do desafio.
 
 Paredes usam a camada `CourseWalls` (8). Ao adicionar uma parede, use essa camada para os inimigos enxergarem e respeitarem a colisão. Paredes precisam de `BoxCollider2D` sem trigger.
 
@@ -47,7 +47,7 @@ bash scripts/package-web.sh
 
 Relatórios ficam em `TestResults/`. A saída WebGL fica em `Builds/WebGL/` e o pacote em `Builds/percurso-webgl.zip`. Teste em navegador com `python3 -m http.server 8765 --bind 127.0.0.1 --directory Builds/WebGL`.
 
-Os testes exercitam derrota no primeiro impacto, colisões, transição/reinício de fase, estados da armadilha, piso lento, perseguição, limites, pausa, impacto da barra giratória e reversão do pêndulo, bloqueio do vão pelo guarda, percurso de atração e contorno, e conectividade dos cinco setores do desafio. A avaliação de dificuldade continua dependendo de partidas reais.
+Os testes exercitam derrota no primeiro impacto, colisões, transição/reinício de fase, estados da armadilha, piso lento, perseguição, limites, pausa, impacto da barra giratória e reversão do pêndulo, bloqueio do vão pelo guarda, percurso de atração e contorno, bloqueio dos quatro desvios laterais, janelas seguras e perigosas das duas barras, e conectividade dos cinco setores do desafio. A avaliação de dificuldade continua dependendo de partidas reais.
 
 No itch.io, use o tipo HTML e marque o ZIP para ser jogado no navegador. O ZIP precisa ter `index.html` na raiz. A publicação depende do acesso à conta do autor.
 

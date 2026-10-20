@@ -27,7 +27,7 @@ namespace ObstacleCourse
         {
             if (!tutorial) return "Alcance a chegada antes do tempo acabar. Um impacto encerra a tentativa.";
             if (position.x < -6.5f && position.y < 2.5f)
-                return "WASD / setas para mover. A barra dá voltas completas: observe o espaço que ela varre.";
+                return "WASD / setas. Espere o braço abrir passagem à direita do eixo e acompanhe o giro.";
             if (position.x < -3.5f && position.y > 2.5f)
                 return "Bloco móvel: por cima é mais seguro; por baixo é mais rápido. Espere a abertura.";
             if (position.x < 3.5f)

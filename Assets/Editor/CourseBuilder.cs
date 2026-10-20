@@ -110,7 +110,7 @@ public static class CourseBuilder
         level.title = tutorial ? "Tutorial" : "Desafio";
         level.tutorial = tutorial;
         level.timeLimit = tutorial ? 90 : 38;
-        level.layoutVersion = tutorial ? 3 : 4;
+        level.layoutVersion = 4;
         level.spawn = new Vector2(-13,-4.5f);
         var arena = root.transform;
         Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
@@ -150,6 +150,11 @@ public static class CourseBuilder
             };
             level.rotors[0].degreesPerSecond=65;
             level.rotors[1].period=4.5f;
+            // Os vãos ficam dentro do alcance das barras: não há desvio pela borda do setor.
+            Wall("Grade do braço — esquerda",arena,new Vector2(-13.725f,-.5f),new Vector2(2.25f,.35f));
+            Wall("Grade do braço — direita",arena,new Vector2(-7.95f,-.5f),new Vector2(2.9f,.35f));
+            Wall("Grade do pêndulo — esquerda",arena,new Vector2(-4.25f,2.8f),new Vector2(2.9f,.35f));
+            Wall("Grade do pêndulo — direita",arena,new Vector2(1.4f,2.8f),new Vector2(2.4f,.35f));
             // A única saída tem 1,2 unidades: o guarda ocupa o vão até ser atraído.
             Wall("Guarita esquerda",arena,new Vector2(6.8f,2.4f),new Vector2(6.8f,.6f));
             Wall("Guarita direita",arena,new Vector2(13.2f,2.4f),new Vector2(3.6f,.6f));

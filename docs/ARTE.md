@@ -1,18 +1,18 @@
 # Teste de arte — saída das celas
 
-O teste ocupa o primeiro setor do tutorial, à esquerda da primeira divisória. O prisioneiro usa a arte nova durante todo o tutorial. O desafio mantém a apresentação geométrica. A geometria física, os tempos, as velocidades, os três guardas do desafio e as regras de dano não foram alterados.
+O piso e as máquinas do primeiro setor usam pixel art. O prisioneiro e as grades aparecem em todo o tutorial. O desafio mantém a apresentação geométrica. As divisórias principais continuam nas mesmas posições e dimensões; quatro trechos curtos de grade fecham os desvios laterais do braço e do pêndulo. Tempos, velocidades, três guardas do desafio e regras de dano permanecem iguais. A placa “SAÍDA DAS CELAS” foi removida do percurso.
 
 ## Origem das artes
 
 - Cenário: Modern Interiors Free v2.2, por LimeZu, https://limezu.itch.io/moderninteriors. ZIP obtido na página oficial em 2026-10-20. Uso não comercial conforme LICENSE.txt incluído no pacote. PNGs originais ficam fora do Git público; importação documentada no README.
-- Personagem, braço giratório e bloco/portão: gerados pela ferramenta integrada OpenAI imagegen, com transparência. A imagem free_overview.png do pacote foi fornecida como referência de estilo. Não houve uso de API/CLI externa nem de artes extraídas de The Escapists.
+- Personagem, braço giratório, bloco/portão e grades: gerados pela ferramenta integrada OpenAI imagegen, com transparência. A imagem free_overview.png do pacote foi fornecida como referência de estilo para os três primeiros assets. A grade usa Slider.png, já gerado, como referência. Não houve uso de API/CLI externa nem de artes extraídas de The Escapists.
 - Os arquivos gerados permanecem em Assets/Art/Prison/Generated. Os recortes de sprites são criados pelo PrisonArtBuilder. O Unity aplica filtro Point, sem compressão nem mipmaps, e limita a resolução de importação para aproximar a densidade de pixels do cenário.
 
 ## Escopo e limitações
 
 Esta é uma amostra para avaliar a direção visual, não a aplicação da arte ao jogo inteiro. O cenário usa somente uma fração do pacote gratuito. O prisioneiro tem quatro direções e três quadros de caminhada por direção, além do quadro parado. As margens de cada célula são recortadas e os pés alinhados na importação. As animações geradas ainda devem ser avaliadas visualmente pelo autor do jogo.
 
-PrisonerVisual cuida apenas da apresentação. O quadrado original continua sendo a referência de física; sua imagem é ocultada no tutorial e reaparece no desafio. O braço e o portão mantêm seus colliders originais. O recorte do braço fica ajustado à largura e espessura do obstáculo existente.
+PrisonerVisual cuida apenas da apresentação. O quadrado original continua sendo a referência de física; sua imagem é ocultada no tutorial e reaparece no desafio. O braço e o portão mantêm seus colliders originais. O recorte do braço fica ajustado à largura e espessura do obstáculo existente. As grades são módulos repetidos, com base escura contínua. Seu desenho usa a posição e a dimensão do BoxCollider2D da parede, evitando manter duas geometrias separadas. Os vazios entre barras são apenas visuais: toda a base bloqueia a passagem.
 
 ## Prompts finais
 
@@ -35,11 +35,18 @@ Use case: stylized-concept. Asset type: one transparent sprite for a square slid
 Transparência: true. Referência: Modern tiles_Free/free_overview.png.
 
 
+### cell-bars
+
+Use case: stylized-concept. Asset type: one modular horizontal prison-cell grille tile for a top-down pixel-art Unity game. Input image is STYLE REFERENCE ONLY: match the existing sprite's muted slate-violet outlines, grey steel, restrained off-white highlights and crisp coarse pixel-art grid. Create a NEW static wall segment, not a moving obstacle. A wide horizontal rectangular steel grille panel, width-to-height ratio 3:1. Exactly six thin vertical iron bars, equally spaced. Continuous dark steel top and bottom rails. A slightly thicker slate concrete footing at the bottom clearly signals a solid impassable wall. Simple rectangular silhouette, no perspective foreshortening, no gate handle or hinges, no diagonal stripes, no yellow, no red light. Flat orthographic stylized view suitable for rotating by 90 degrees in an overhead game. Small metal rivets on the rails, square pixel shading. Intended logical resolution about 48 by 16 pixels, enlarged with large hard square pixels and very few colors. Object isolated and centered on truly transparent square canvas, with transparent gaps between bars and generous transparent margins above and below. No setting, no floor, no extra objects, no cast shadow, no text, no watermark, no glow, no smoothing. The side edges must align so multiple identical panels can repeat along a wall without changing the thickness. Output one panel only.
+
+Transparência: true. Ferramenta integrada imagegen. Referência de estilo: Assets/Art/Prison/Generated/Slider.png. Arquivo final: Assets/Art/Prison/Generated/CellBars.png.
+
+
 ## Verificação deste teste
 
 - WebGL compilado com sucesso no Unity 6000.3.26f1.
-- 18 testes PlayMode existentes passaram após a integração da arte; cobrem colisões, dano, pausa, reinício, progressão e mecânicas das fases.
-- Inspeção manual no navegador: quatro direções do prisioneiro; reinício; passagem superior do primeiro portão; dano do braço giratório; pausa; retorno ao menu; desafio com o quadrado e a arte geométrica originais.
+- 20 testes PlayMode passaram após a revisão das grades. Incluem bloqueio físico dos quatro desvios laterais e travessias seguras e perigosas do braço e do pêndulo, além de colisões, dano, pausa, reinício, progressão e mecânicas das fases.
+- Inspeção manual da revisão: placa removida; grades visíveis; bloqueio da lateral esquerda; travessia do braço pela direita; reinício e pausa. Na integração inicial também foram conferidos as quatro direções do prisioneiro, o primeiro portão, dano, menu e apresentação geométrica do desafio.
 - A folha gerada não veio com células uniformes. A importação identifica quatro faixas ocupadas em cada eixo, separadas por transparência, evitando recortar os pés e misturar quadros de direções diferentes.
 - A versão final não apresentou erros ou avisos no console do navegador durante essas verificações.
 - A amostra valida a integração visual; não representa uma nova avaliação da dificuldade do desafio nem a arte final do jogo inteiro.

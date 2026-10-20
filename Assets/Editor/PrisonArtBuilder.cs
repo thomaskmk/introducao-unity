@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using ObstacleCourse;
 
-// A small visual trial on the first sector of the approved tutorial.
+// A visual trial on the first sector and the tutorial's prison walls.
 // Art is placed around the existing colliders; no gameplay objects are recreated.
 public static class PrisonArtBuilder
 {
@@ -27,11 +27,10 @@ public static class PrisonArtBuilder
         square = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Prototype/Square.png");
         var rooms = Texture(Licensed + "RoomBuilder.png", 512);
         var level = game.levels[0];
-        var root = new GameObject("Arte — saída das celas (teste)").transform;
+        var root = new GameObject("Arte — prisão (teste)").transform;
         root.SetParent(level.transform, false);
 
         var floor = Slice(rooms, "ConcreteFloor", new Rect(192, 192, 16, 16), 24);
-        var wall = Slice(rooms, "ConcreteWall", new Rect(16, 280, 16, 16), 24);
         // Every floor tile stays inside the original walkable bounds.
         Tiled("Piso de concreto", root, floor, new Vector2(-10.675f, 0), new Vector2(8.35f, 12), -8);
         // Sparse joints make large concrete slabs readable at the game's normal zoom.
@@ -43,26 +42,11 @@ public static class PrisonArtBuilder
         Solid("Faixa lateral esquerda", root, new Vector2(-14.35f, 0), new Vector2(.06f, 11.7f), "#D0AC58", -7);
         Solid("Faixa lateral direita", root, new Vector2(-7.05f, -1.2f), new Vector2(.06f, 9.2f), "#D0AC58", -7);
 
-        var original = level.transform.Find("Parede 01 — passe por cima");
-        original.GetComponent<SpriteRenderer>().enabled = false;
-        level.transform.Find("Parede 01 — passe por cima destaque").GetComponent<SpriteRenderer>().enabled = false;
-        Tiled("Parede de concreto", root, wall, new Vector2(-6.1f, -1.25f), new Vector2(.8f, 9.5f), 1);
-        Solid("Acabamento da divisória", root, new Vector2(-6.1f, 3.45f), new Vector2(.8f, .1f), "#D1D4D8", 2);
-        Solid("Lateral da divisória", root, new Vector2(-6.46f, -1.25f), new Vector2(.08f, 9.5f), "#454655", 2);
-        Tiled("Parede externa esquerda", root, wall, new Vector2(-15, 0), new Vector2(.3f, 12.6f), 2);
-        Tiled("Parede externa superior", root, wall, new Vector2(-10.675f, 6.15f), new Vector2(8.65f, .3f), 2);
-        Tiled("Parede externa inferior", root, wall, new Vector2(-10.675f, -6.15f), new Vector2(8.65f, .3f), 2);
+        DressWalls(level, root);
 
         var start = level.transform.Find("Área inicial");
         start.GetComponent<SpriteRenderer>().enabled = false;
-        var title = level.transform.Find("INÍCIO").GetComponent<TextMesh>();
-        title.text = "SAÍDA DAS CELAS";
-        title.characterSize = .04f;
-        title.color = Color.white;
-        title.transform.position = new Vector3(-10.7f, -3.05f, .04f);
-        title.GetComponent<MeshRenderer>().sortingOrder = -4;
-        Solid("Placa de saída", root, new Vector2(-10.7f, -3.05f), new Vector2(3.5f, .45f), "#363A48", -5);
-        Label("SETOR 01 · MANUTENÇÃO", root, new Vector2(-10.7f, -5.75f), .035f);
+        level.transform.Find("INÍCIO").gameObject.SetActive(false);
 
         var rotor = level.rotors[0];
         var bar = rotor.transform.Find("Barra").GetComponent<SpriteRenderer>();
@@ -97,9 +81,35 @@ public static class PrisonArtBuilder
 
         DressPlayer(game);
         // Below the controls, clear of the existing hint panel.
-        Label("Cenário: LimeZu · Modern Interiors Free  |  Personagem e máquinas: arte gerada", root,
+        Label("Piso: LimeZu · Modern Interiors Free  |  Personagem, máquinas e grades: arte gerada", root,
             new Vector2(0, -8.35f), .028f, new Color(.65f, .72f, .78f));
         Debug.Log("ARTE: primeiro setor do tutorial usa Modern Interiors Free + sprites gerados.");
+    }
+
+    private static void DressWalls(CourseLevel level, Transform root)
+    {
+        var bars = TightSprite(Generated + "CellBars.png", "CellBars", 128);
+        if (bars == null) return;
+        foreach (var collider in level.GetComponentsInChildren<BoxCollider2D>())
+        {
+            if (collider.isTrigger || collider.gameObject.layer != 8) continue;
+            collider.GetComponent<SpriteRenderer>().enabled = false;
+            var highlight = level.transform.Find(collider.name + " destaque");
+            if (highlight != null) highlight.GetComponent<SpriteRenderer>().enabled = false;
+            // Match the solid collider, rather than maintain a second set of wall coordinates.
+            Vector2 size = Vector2.Scale(collider.size, collider.transform.lossyScale);
+            Vector2 center = collider.transform.TransformPoint(collider.offset);
+            Solid(collider.name + " base", root, center, size, "#292C39", 1);
+            bool vertical = size.y > size.x;
+            float thickness = vertical ? size.x : size.y;
+            float length = vertical ? size.y : size.x;
+            float scale = thickness / bars.bounds.size.y;
+            var graphic = Draw(collider.name + " grades", root, bars, center, bars.bounds.size, 2);
+            graphic.drawMode = SpriteDrawMode.Tiled;
+            graphic.size = new Vector2(length / scale, bars.bounds.size.y);
+            graphic.transform.localScale = new Vector3(scale, scale, 1);
+            graphic.transform.rotation = Quaternion.Euler(0, 0, vertical ? 90 : 0);
+        }
     }
 
     private static void DressPlayer(GameController game)
