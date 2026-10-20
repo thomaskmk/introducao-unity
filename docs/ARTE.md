@@ -1,18 +1,28 @@
-# Teste de arte — saída das celas
+# Arte — fuga da prisão
 
-O piso e as máquinas do primeiro setor usam pixel art. O prisioneiro e as grades aparecem em todo o tutorial. O desafio mantém a apresentação geométrica. As divisórias principais continuam nas mesmas posições e dimensões; quatro trechos curtos de grade fecham os desvios laterais do braço e do pêndulo. Tempos, velocidades, três guardas do desafio e regras de dano permanecem iguais. A placa “SAÍDA DAS CELAS” foi removida do percurso.
+As duas fases usam o mesmo conjunto de pixel art: piso de concreto, grades, prisioneiro, guardas, máquinas e pisos especiais. O layout aprovado em ed4852f foi preservado. A reconstrução foi comparada à cena anterior: 79 registros de física e regras idênticos, incluindo posições, rotações, escalas, colliders, corpos físicos, tempos, velocidades, limites de patrulha e composição das fases. O tutorial e o desafio permanecem na versão de percurso 4.
 
 ## Origem das artes
 
 - Cenário: Modern Interiors Free v2.2, por LimeZu, https://limezu.itch.io/moderninteriors. ZIP obtido na página oficial em 2026-10-20. Uso não comercial conforme LICENSE.txt incluído no pacote. PNGs originais ficam fora do Git público; importação documentada no README.
-- Personagem, braço giratório, bloco/portão e grades: gerados pela ferramenta integrada OpenAI imagegen, com transparência. A imagem free_overview.png do pacote foi fornecida como referência de estilo para os três primeiros assets. A grade usa Slider.png, já gerado, como referência. Não houve uso de API/CLI externa nem de artes extraídas de The Escapists.
+- Prisioneiro, guardas, braço giratório, bloco/portão, pistão, grades e pisos especiais: gerados pela ferramenta integrada OpenAI imagegen, com transparência. A imagem free_overview.png do pacote foi fornecida como referência de estilo para os três primeiros assets. Grades, pistão e pisos especiais usam Slider.png como referência; o guarda usa Prisoner.png. Não houve uso de API/CLI externa nem de artes extraídas de The Escapists.
 - Os arquivos gerados permanecem em Assets/Art/Prison/Generated. Os recortes de sprites são criados pelo PrisonArtBuilder. O Unity aplica filtro Point, sem compressão nem mipmaps, e limita a resolução de importação para aproximar a densidade de pixels do cenário.
 
-## Escopo e limitações
+## Integração e limites
 
-Esta é uma amostra para avaliar a direção visual, não a aplicação da arte ao jogo inteiro. O cenário usa somente uma fração do pacote gratuito. O prisioneiro tem quatro direções e três quadros de caminhada por direção, além do quadro parado. As margens de cada célula são recortadas e os pés alinhados na importação. As animações geradas ainda devem ser avaliadas visualmente pelo autor do jogo.
+O concreto vem de Modern Interiors Free. As grades usam módulos repetidos com base sólida. Cada desenho de parede ou máquina se ajusta ao collider existente; a arte não redefine a física. Braço e pêndulo compartilham a peça industrial, com uma tonalidade mais quente no pêndulo. Portões quadrados e pistões retangulares mantêm as dimensões e trajetórias originais.
 
-PrisonerVisual cuida apenas da apresentação. O quadrado original continua sendo a referência de física; sua imagem é ocultada no tutorial e reaparece no desafio. O braço e o portão mantêm seus colliders originais. O recorte do braço fica ajustado à largura e espessura do obstáculo existente. As grades são módulos repetidos, com base escura contínua. Seu desenho usa a posição e a dimensão do BoxCollider2D da parede, evitando manter duas geometrias separadas. Os vazios entre barras são apenas visuais: toda a base bloqueia a passagem.
+PrisonCharacterVisual anima prisioneiro e guardas nas quatro direções, com repouso e três quadros de caminhada. A animação acompanha o deslocamento real, pausa com o jogo e reinicia com a tentativa. Os guardas mantêm os indicadores de atenção/perseguição sobre a cabeça. O comportamento de detecção e perseguição continua em ChaserEnemy.
+
+PrisonTrapVisual usa o mesmo relógio da armadilha: cinza apagado, amarelo de aviso e vermelho ativo. A textura azul representa uma área alagada, com limite visual exatamente no contorno do piso lento. A saída tem concreto verde e marcação de borda dentro da área original. As placas didáticas permanecem apenas no tutorial.
+
+Os sprites usam filtro Point, sem mipmaps ou compressão. Os personagens gerados são recortados por faixas transparentes; não se presume que a folha tenha células uniformes. O desenho dos personagens ocupa espaço acima dos pés, como em um jogo visto de cima; as colisões originais de 0,7 para o jogador e 0,9 para os guardas permanecem iguais.
+
+## Reconstrução e conferência
+
+O menu Percurso > Reconstruir as duas fases recria a cena a partir de CourseBuilder e aplica PrisonArtBuilder. Esse procedimento sobrescreve alterações manuais na cena.
+
+Para reconstruir e comparar com a cena salva, execute o Unity em batch com `-executeMethod PrisonArtValidation.RebuildPreservingGameplay`. Os arquivos `Logs/gameplay-before.txt` e `Logs/gameplay-after.txt` registram a comparação; diferenças fazem a operação falhar. A comparação exige a cena aprovada previamente salva. Ela não substitui a inspeção visual.
 
 ## Prompts finais
 
@@ -42,11 +52,34 @@ Use case: stylized-concept. Asset type: one modular horizontal prison-cell grill
 Transparência: true. Ferramenta integrada imagegen. Referência de estilo: Assets/Art/Prison/Generated/Slider.png. Arquivo final: Assets/Art/Prison/Generated/CellBars.png.
 
 
-## Verificação deste teste
+### Guard
 
-- WebGL compilado com sucesso no Unity 6000.3.26f1.
-- 20 testes PlayMode passaram após a revisão das grades. Incluem bloqueio físico dos quatro desvios laterais e travessias seguras e perigosas do braço e do pêndulo, além de colisões, dano, pausa, reinício, progressão e mecânicas das fases.
-- Inspeção manual da revisão: placa removida; grades visíveis; bloqueio da lateral esquerda; travessia do braço pela direita; reinício e pausa. Na integração inicial também foram conferidos as quatro direções do prisioneiro, o primeiro portão, dano, menu e apresentação geométrica do desafio.
-- A folha gerada não veio com células uniformes. A importação identifica quatro faixas ocupadas em cada eixo, separadas por transparência, evitando recortar os pés e misturar quadros de direções diferentes.
-- A versão final não apresentou erros ou avisos no console do navegador durante essas verificações.
-- A amostra valida a integração visual; não representa uma nova avaliação da dificuldade do desafio nem a arte final do jogo inteiro.
+Use case: stylized-concept. Asset type: transparent pixel-art 4x4 character spritesheet for a top-down prison escape game. Reference image is STYLE REFERENCE ONLY, match the exact chibi scale, large head/small body proportions, coarse square pixels, muted slate-violet outlines and 3/4 overhead viewpoint of this prisoner. Generate a NEW adult prison guard wearing a dark navy blue uniform, navy peaked cap with a small gold badge, medium skin, dark boots and a utility belt. No weapon held, no baton extended, hands close to body. Exactly 16 separated full-body sprites in 4 columns and 4 rows with wide empty transparent gutters and aligned feet in each row. Row 1 faces SOUTH toward viewer, row 2 WEST left, row 3 EAST right, row 4 NORTH away. Each row: idle, left step, idle, right step. Keep every character same height, width, outfit and proportions. Think 32x32 logical-pixel cells and a character 14 pixels wide, 26 high. Very coarse crisp pixel art, few colors, no soft edges, no blur, no glow. Transparent canvas and margins, no environment, no separate shadows, no grid borders, no labels, no text, no watermarks. Practical animation spritesheet, not a concept board.
+
+Ferramenta: imagegen integrado. Referência de estilo: Assets/Art/Prison/Generated/Prisoner.png. Transparência: true. Arquivo final: Assets/Art/Prison/Generated/Guard.png.
+
+### FloorTrap
+
+Use case: stylized-concept. Asset type: ONE square modular metal floor hazard tile for an overhead pixel-art prison escape game. Reference is STYLE REFERENCE ONLY: use the same muted slate violet dark outlines, steel grey off-white highlights and coarse crisp square pixel grid. Draw a square steel floor grate, flat orthographic view directly from above. One solid rectangular silhouette, no perspective, four corner bolts, dark recessed parallel vent slots inside, a thin metal frame around all four edges. A few neutral white inset status strips along the upper and lower edges: these will be colored by the game to indicate safe, warning, active. Entire sprite neutral desaturated grey, no yellow, no red, no green. Logical resolution about 24x24 pixels enlarged with hard square pixels. Make design legible at small size. Single isolated square plate centered with transparent margin. No floor outside plate, no machine outside plate, no smoke, no beams outside plate, no glow or shadows, no text, no letters, no labels, no anti-aliasing. One tile only. It will repeat in a horizontal strip as an industrial security floor.
+
+Ferramenta: imagegen integrado. Referência de estilo: Assets/Art/Prison/Generated/Slider.png. Transparência: true. Arquivo final: Assets/Art/Prison/Generated/FloorTrap.png.
+
+### SlowFloor
+
+Use case: stylized-concept. Asset type: ONE seamless square floor texture tile for a pixel-art overhead prison escape game, a flooded/slippery maintenance floor that slows movement. Reference is STYLE REFERENCE ONLY for coarse square pixels, muted restrained palette and dark slate outlines. Orthographic view directly from above. Fill the entire square canvas edge to edge with dark desaturated blue-grey water over rough concrete, with a few sparse lighter muted blue short horizontal ripple pixels. Subtle uneven oily puddle patches and a few sparse dark square speckles. Quiet low-contrast texture, approximately 24x24 logical pixels, crisp nearest-neighbor square blocks, 5 colors maximum. All four edges must tile seamlessly. No enclosing frame, no object, no scenery, no text, no icons, no transparency, no perspective, no gradient, no smooth reflections, no glow. The water should be darker and bluer than the grey concrete surrounding it.
+
+Ferramenta: imagegen integrado. Referência de estilo: Assets/Art/Prison/Generated/Slider.png. Transparência: false. Arquivo final: Assets/Art/Prison/Generated/SlowFloor.png.
+
+### Piston
+
+Use case: stylized-concept. Asset type: ONE narrow vertical rectangular moving piston/block game sprite, width to height ratio 1:2. Reference image is STYLE REFERENCE ONLY, match muted slate-violet outlines, steel grey, off-white highlights, coarse crisp pixel blocks, mustard yellow and charcoal caution stripes. Orthographic view directly from above, zero perspective. Compact rectangular hydraulic steel carriage: two short inset parallel silver rods running vertically through a central dark housing, sturdy metal caps across top and bottom, bolts at the four corners. Mustard yellow/charcoal diagonal caution strip across top and bottom caps. No rods or pieces outside the rectangular silhouette. No pedestal, no wall, no attached rail. Approximate logical resolution 16x32 pixels, very coarse crisp pixel art enlarged with hard squares and few colors. One isolated object centered in a transparent canvas with generous transparent margins. No environment, no cast shadow, no text, no glow, no blur, no anti-aliasing. It must remain recognizable when rotated by 90 degrees.
+
+Ferramenta: imagegen integrado. Referência de estilo: Assets/Art/Prison/Generated/Slider.png. Transparência: true. Arquivo final: Assets/Art/Prison/Generated/Piston.png.
+
+## Verificação da integração completa
+
+- Comparação da cena com a versão aprovada ed4852f: 79 registros de física e regras idênticos. A comparação foi repetida após o ajuste das placas.
+- 22 testes PlayMode aprovados: mecânicas anteriores e novos testes de animação, perseguição, pausa, reinício, troca de fase e cores dos três estados do piso de segurança.
+- WebGL compilado no Unity 6000.3.26f1. Inspeção no navegador das duas fases, movimento do prisioneiro, patrulha animada dos três guardas do desafio, pisos, máquinas e placas do tutorial.
+- Os três estados do piso de segurança também foram conferidos visualmente no navegador; nenhum erro ou aviso apareceu no console durante a inspeção.
+- Os limites de tempo, o número de inimigos, as regras de dano e os recordes da versão 4 foram preservados.

@@ -39,6 +39,66 @@ namespace ObstacleCourse.Tests
             game.player.GetComponent<Rigidbody2D>().position=position;
             Physics2D.SyncTransforms();
         }
+        [UnityTest] public IEnumerator CharactersKeepTheirArtAcrossChasePauseRestartAndLevelChange()
+        {
+            var prisoner=game.player.GetComponent<PrisonCharacterVisual>();
+            var guard=game.Level.enemies[0].GetComponent<PrisonCharacterVisual>();
+            Assert.NotNull(prisoner); Assert.NotNull(guard);
+            Place(guard.guard.pointA+Vector2.down*2);
+            yield return new WaitForSeconds(.25f);
+            Assert.IsTrue(guard.guard.IsChasing);
+            Assert.AreEqual("!",guard.guard.label.text);
+            Assert.AreNotEqual(guard.frames[0],guard.character.sprite,"O guarda precisa caminhar durante a perseguição.");
+            Assert.IsFalse(guard.prototype.enabled);
+            game.TogglePause();
+            var frame=guard.character.sprite;
+            yield return new WaitForSecondsRealtime(.15f);
+            Assert.AreEqual(frame,guard.character.sprite,"A animação deve pausar junto com o jogo.");
+            game.StartRun(); yield return null; yield return null;
+            Assert.AreEqual(guard.frames[0],guard.character.sprite);
+            Assert.AreEqual("?",guard.guard.label.text);
+            game.ReachFinish(); game.PrimaryAction(); yield return null; yield return null;
+            Assert.AreEqual(1,game.LevelIndex);
+            Assert.IsTrue(prisoner.character.enabled);
+            Assert.IsFalse(prisoner.prototype.enabled,"O desafio não deve voltar ao quadrado provisório.");
+            foreach(var enemy in game.Level.enemies)
+            {
+                var visual=enemy.GetComponent<PrisonCharacterVisual>();
+                Assert.NotNull(visual);
+                Assert.IsTrue(visual.character.enabled);
+                Assert.IsFalse(visual.prototype.enabled);
+                Assert.AreEqual(16,visual.frames.Length);
+                foreach(var sprite in visual.frames) Assert.NotNull(sprite);
+            }
+        }
+        [UnityTest] public IEnumerator SecurityFloorKeepsSafeWarningAndActiveColors()
+        {
+            var trap=game.Level.traps[0];
+            var art=trap.GetComponent<PrisonTrapVisual>();
+            Assert.NotNull(art);
+            yield return null; yield return null;
+            Assert.AreEqual(TrapPhase.Safe,trap.Phase);
+            Assert.Greater(art.surface.color.b,art.surface.color.r);
+            game.Session.Tick(trap.safeSeconds-game.Session.Elapsed);
+            yield return null; yield return null;
+            Assert.AreEqual(TrapPhase.Warning,trap.Phase);
+            Assert.Greater(art.surface.color.r,.95f);
+            Assert.Greater(art.surface.color.g,.7f);
+            Assert.Less(art.surface.color.b,.3f);
+            game.Session.Tick(trap.safeSeconds+trap.warningSeconds-game.Session.Elapsed);
+            yield return null; yield return null;
+            Assert.AreEqual(TrapPhase.Active,trap.Phase);
+            Assert.Greater(art.surface.color.r,.95f);
+            Assert.Less(art.surface.color.g,.3f);
+            game.TogglePause();
+            Color paused=art.surface.color;
+            yield return new WaitForSecondsRealtime(.15f);
+            Assert.AreEqual(paused,art.surface.color);
+            game.StartRun(); yield return null; yield return null;
+            Assert.AreEqual(TrapPhase.Safe,trap.Phase);
+            Assert.Greater(art.surface.color.b,art.surface.color.r);
+            Assert.IsFalse(art.prototype.enabled);
+        }
         [UnityTest] public IEnumerator TrapWarnsBeforeDamageAndHurtsPlayerAlreadyInside()
         {
             var trap=game.Level.traps[0];

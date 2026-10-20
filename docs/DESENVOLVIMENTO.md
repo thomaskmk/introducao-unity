@@ -32,7 +32,7 @@ A cena está salva e pode ser editada no Inspector. **Percurso > Reconstruir as 
 
 ## Organização do código
 
-`RunSession` contém as regras sem depender da cena. `GameController` seleciona a fase e coordena a partida; `CourseLevel` reúne os objetos de cada fase. Os componentes individuais cuidam de movimento, inimigos e obstáculos. `CourseHud` apresenta os estados e `CameraFit` mantém a arena visível. `Editor/CourseBuilder` constrói a cena e gera a versão WebGL.
+`RunSession` contém as regras sem depender da cena. `GameController` seleciona a fase e coordena a partida; `CourseLevel` reúne os objetos de cada fase. Os componentes individuais cuidam de movimento, inimigos e obstáculos. `CourseHud` apresenta os estados e `CameraFit` mantém a arena visível. `Editor/CourseBuilder` constrói a cena e gera a versão WebGL. `Editor/PrisonArtBuilder` aplica a arte às duas fases sem alterar os objetos físicos; `PrisonCharacterVisual` anima os personagens e `PrisonTrapVisual` acompanha os estados das armadilhas.
 
 ## Testes e build
 
@@ -53,7 +53,7 @@ No itch.io, use o tipo HTML e marque o ZIP para ser jogado no navegador. O ZIP p
 
 ## Verificação visual
 
-A primeira divisória do tutorial foi reposicionada de x=-6 para x=-6,1, mantendo o topo e a passagem inferior do bloco. Na versão WebGL verificada, a parede voltou a aparecer com o SpriteRenderer e material padrão do projeto; sua colisão acompanha a mesma posição. As duas fases devem continuar sendo verificadas visualmente no navegador após mudanças na cena.
+A primeira divisória do tutorial foi reposicionada de x=-6 para x=-6,1, mantendo o topo e a passagem inferior do bloco. Na versão WebGL verificada, a parede voltou a aparecer com o SpriteRenderer e material padrão do projeto; sua colisão acompanha a mesma posição. As duas fases devem continuar sendo verificadas visualmente no navegador após mudanças na cena. A ampliação da arte mantém os 79 registros de física e regras da versão aprovada: `PrisonArtValidation.RebuildPreservingGameplay` reconstrói a cena comparando os registros antes/depois e interrompe em caso de diferença.
 
 ## Créditos
 

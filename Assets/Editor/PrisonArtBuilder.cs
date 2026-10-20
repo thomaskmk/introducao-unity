@@ -5,8 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using ObstacleCourse;
 
-// A visual trial on the first sector and the tutorial's prison walls.
-// Art is placed around the existing colliders; no gameplay objects are recreated.
+// Presentation only. Physics objects, dimensions and gameplay settings are never modified here.
 public static class PrisonArtBuilder
 {
     private const string Licensed = "Assets/Art/Licensed/ModernInteriors/";
@@ -17,87 +16,77 @@ public static class PrisonArtBuilder
 
     public static void Apply(GameController game)
     {
-        if (!File.Exists(Licensed + "RoomBuilder.png") || !File.Exists(Generated + "Prisoner.png"))
+        if (!File.Exists(Licensed + "RoomBuilder.png"))
         {
-            Debug.LogWarning("ARTE: importe Modern Interiors Free e as artes geradas antes de reconstruir o teste visual.");
+            Debug.LogWarning("ARTE: importe Modern Interiors Free antes de reconstruir o cenário da prisão.");
             return;
         }
         Directory.CreateDirectory(Sprites);
         material = AssetDatabase.LoadAssetAtPath<Material>("Assets/Art/Prototype/Unlit.mat");
         square = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Prototype/Square.png");
         var rooms = Texture(Licensed + "RoomBuilder.png", 512);
-        var level = game.levels[0];
-        var root = new GameObject("Arte — prisão (teste)").transform;
-        root.SetParent(level.transform, false);
-
         var floor = Slice(rooms, "ConcreteFloor", new Rect(192, 192, 16, 16), 24);
-        // Every floor tile stays inside the original walkable bounds.
-        Tiled("Piso de concreto", root, floor, new Vector2(-10.675f, 0), new Vector2(8.35f, 12), -8);
-        // Sparse joints make large concrete slabs readable at the game's normal zoom.
-        for (float x = -13.8f; x < -6.5f; x += 1.05f)
-            Solid("Junta vertical", root, new Vector2(x, 0), new Vector2(.025f, 12), "#829092", -7);
-        for (float y = -5; y < 6; y += 1)
-            Solid("Junta horizontal", root, new Vector2(-10.675f, y), new Vector2(8.35f, .025f), "#829092", -7);
-        // Thin strips describe the maintenance lane without introducing obstacles.
-        Solid("Faixa lateral esquerda", root, new Vector2(-14.35f, 0), new Vector2(.06f, 11.7f), "#D0AC58", -7);
-        Solid("Faixa lateral direita", root, new Vector2(-7.05f, -1.2f), new Vector2(.06f, 9.2f), "#D0AC58", -7);
-
-        DressWalls(level, root);
-
-        var start = level.transform.Find("Área inicial");
-        start.GetComponent<SpriteRenderer>().enabled = false;
-        level.transform.Find("INÍCIO").gameObject.SetActive(false);
-
-        var rotor = level.rotors[0];
-        var bar = rotor.transform.Find("Barra").GetComponent<SpriteRenderer>();
+        var bars = TightSprite(Generated + "CellBars.png", "CellBars", 128);
         var beam = TightSprite(Generated + "Rotor.png", "IndustrialArm", 128);
-        if (beam != null)
-        {
-            bar.enabled = false;
-            rotor.transform.Find("Eixo").GetComponent<SpriteRenderer>().enabled = false;
-            var graphic = Draw("Braço mecânico", rotor.transform, beam, rotor.transform.position, new Vector2(3.6f, .32f), 4);
-            graphic.transform.localPosition = new Vector3(0, 0, -.04f);
-            graphic.transform.localRotation = Quaternion.identity;
-        }
-        var block = level.blocks[0];
         var gate = TightSprite(Generated + "Slider.png", "SlidingGate", 64);
-        if (gate != null)
-        {
-            block.GetComponent<SpriteRenderer>().enabled = false;
-            var graphic = Draw("Portão de segurança", block.transform, gate, block.transform.position, Vector2.one, 4);
-            graphic.transform.localPosition = new Vector3(0, 0, -.04f);
-        }
-        // Rails and sweep markings remain visible above the new floor.
-        var rail = level.transform.Find("Bloco superior trilho").GetComponent<SpriteRenderer>();
-        rail.color = new Color(.27f, .28f, .34f);
-        foreach (Transform child in level.transform)
-            if (child.name == "Barra giratória trajetória")
-                child.GetComponent<SpriteRenderer>().color = new Color(.48f, .34f, .20f);
-        var rotorLabel = level.transform.Find("BARRA GIRATÓRIA").GetComponent<TextMesh>();
-        rotorLabel.text = "BRAÇO GIRATÓRIO";
-        rotorLabel.color = Color.white;
-        rotorLabel.GetComponent<MeshRenderer>().sortingOrder = -4;
-        Solid("Placa do braço giratório", root, new Vector2(-11, 1.8f), new Vector2(3.5f, .45f), "#363A48", -5);
+        var piston = TightSprite(Generated + "Piston.png", "SecurityPiston", 128);
+        var trapTile = TightSprite(Generated + "FloorTrap.png", "SecurityFloor", 64);
+        var slowTexture = Texture(Generated + "SlowFloor.png", 32);
+        var water = Slice(slowTexture, "FloodedFloor", new Rect(0, 0, slowTexture.width, slowTexture.height), 24);
+        var prisonerFrames = CharacterFrames("Prisoner");
+        var guardFrames = CharacterFrames("Guard");
+        DressCharacter(game, game.player.transform, game.player.visual, prisonerFrames, "Prisioneiro");
 
-        DressPlayer(game);
-        // Below the controls, clear of the existing hint panel.
-        Label("Piso: LimeZu · Modern Interiors Free  |  Personagem, máquinas e grades: arte gerada", root,
-            new Vector2(0, -8.35f), .028f, new Color(.65f, .72f, .78f));
-        Debug.Log("ARTE: primeiro setor do tutorial usa Modern Interiors Free + sprites gerados.");
+        foreach (var level in game.levels)
+        {
+            var root = new GameObject("Arte — prisão").transform;
+            root.SetParent(level.transform, false);
+            DressFloor(level, root, floor);
+            DressWalls(level, root, bars);
+            DressHazards(level, root, beam, gate, piston, trapTile, water);
+            DressFinish(level, root, floor);
+            DressLabels(level, root);
+            foreach (var enemy in level.enemies)
+            {
+                var animation = DressCharacter(game, enemy.transform, enemy.GetComponent<SpriteRenderer>(), guardFrames, "Guarda");
+                animation.guard = enemy;
+                enemy.label.characterSize = .065f;
+                enemy.label.transform.position = enemy.transform.position + new Vector3(0, 1.05f, -.04f);
+                enemy.label.GetComponent<MeshRenderer>().sortingOrder = 7;
+                Solid("Indicador do guarda", enemy.label.transform, enemy.label.transform.position,
+                    new Vector2(.38f, .42f), "#292C39", 6);
+            }
+            Label("Piso: LimeZu · Modern Interiors Free  |  Personagens, máquinas e grades: arte gerada", root,
+                new Vector2(0, -8.35f), .028f, new Color(.65f, .72f, .78f));
+        }
+        Debug.Log("ARTE: prisão aplicada às duas fases, incluindo personagens e todos os perigos.");
     }
 
-    private static void DressWalls(CourseLevel level, Transform root)
+    private static void DressFloor(CourseLevel level, Transform root, Sprite floor)
     {
-        var bars = TightSprite(Generated + "CellBars.png", "CellBars", 128);
-        if (bars == null) return;
-        foreach (var collider in level.GetComponentsInChildren<BoxCollider2D>())
+        // The same concrete and joint spacing as the approved first sector, extended to the arena.
+        Tiled("Piso de concreto", root, floor, Vector2.zero, new Vector2(29.7f, 12), -8);
+        for (float x = -13.8f; x < 14.85f; x += 1.05f)
+            Solid("Junta vertical", root, new Vector2(x, 0), new Vector2(.025f, 12), "#829092", -7);
+        for (float y = -5; y < 6; y += 1)
+            Solid("Junta horizontal", root, new Vector2(0, y), new Vector2(29.7f, .025f), "#829092", -7);
+        Solid("Faixa lateral esquerda", root, new Vector2(-14.35f, 0), new Vector2(.06f, 11.7f), "#D0AC58", -7);
+        Solid("Faixa lateral direita", root, new Vector2(14.35f, 0), new Vector2(.06f, 11.7f), "#D0AC58", -7);
+        if (level.tutorial)
+            Solid("Faixa do primeiro setor", root, new Vector2(-7.05f, -1.2f), new Vector2(.06f, 9.2f), "#D0AC58", -7);
+        level.transform.Find("Área inicial").GetComponent<SpriteRenderer>().enabled = false;
+        level.transform.Find("INÍCIO").gameObject.SetActive(false);
+    }
+
+    private static void DressWalls(CourseLevel level, Transform root, Sprite bars)
+    {
+        foreach (var collider in level.GetComponentsInChildren<BoxCollider2D>(true))
         {
             if (collider.isTrigger || collider.gameObject.layer != 8) continue;
             collider.GetComponent<SpriteRenderer>().enabled = false;
             var highlight = level.transform.Find(collider.name + " destaque");
             if (highlight != null) highlight.GetComponent<SpriteRenderer>().enabled = false;
-            // Match the solid collider, rather than maintain a second set of wall coordinates.
-            Vector2 size = Vector2.Scale(collider.size, collider.transform.lossyScale);
+            Vector2 size = WorldSize(collider);
             Vector2 center = collider.transform.TransformPoint(collider.offset);
             Solid(collider.name + " base", root, center, size, "#292C39", 1);
             bool vertical = size.y > size.x;
@@ -112,34 +101,144 @@ public static class PrisonArtBuilder
         }
     }
 
-    private static void DressPlayer(GameController game)
+    private static void DressHazards(CourseLevel level, Transform root, Sprite beam, Sprite gate,
+        Sprite piston, Sprite trapTile, Sprite water)
     {
-        var atlas = Texture(Generated + "Prisoner.png", 128);
+        foreach (var rotor in level.rotors)
+        {
+            var collider = rotor.GetComponentInChildren<BoxCollider2D>(true);
+            collider.GetComponent<SpriteRenderer>().enabled = false;
+            rotor.transform.Find("Eixo").GetComponent<SpriteRenderer>().enabled = false;
+            var visual = Fitted("Braço mecânico", collider, beam, false, 4);
+            if (rotor.oscillates) visual.color = new Color(1, .90f, .73f);
+        }
+        foreach (var block in level.blocks)
+        {
+            var collider = block.GetComponent<BoxCollider2D>();
+            block.GetComponent<SpriteRenderer>().enabled = false;
+            var size = WorldSize(collider);
+            bool rectangular = Mathf.Abs(size.x - size.y) > .1f;
+            Fitted(rectangular ? "Pistão de segurança" : "Portão de segurança", collider,
+                rectangular ? piston : gate, rectangular && size.x > size.y, 4);
+            level.transform.Find(block.name + " trilho").GetComponent<SpriteRenderer>().color = new Color(.27f, .28f, .34f);
+        }
+        foreach (var trap in level.traps)
+        {
+            var collider = trap.GetComponent<BoxCollider2D>();
+            var size = WorldSize(collider);
+            var surface = Draw("Piso de segurança", root, trapTile, trap.transform.position, trapTile.bounds.size, -5);
+            float scale = size.y / trapTile.bounds.size.y;
+            surface.drawMode = SpriteDrawMode.Tiled;
+            surface.size = new Vector2(size.x / scale, trapTile.bounds.size.y);
+            surface.transform.localScale = new Vector3(scale, scale, 1);
+            var view = trap.gameObject.AddComponent<PrisonTrapVisual>();
+            view.trap = trap; view.prototype = trap.GetComponent<SpriteRenderer>(); view.surface = surface;
+            view.prototype.enabled = false;
+            surface.color = PrisonTrapVisual.ColorFor(trap.PhaseAt(0));
+        }
+        foreach (var zone in level.slowZones)
+        {
+            zone.GetComponent<SpriteRenderer>().enabled = false;
+            var collider = zone.GetComponent<BoxCollider2D>();
+            Tiled("Área alagada", root, water, zone.transform.position, WorldSize(collider), -6);
+            Border("Limite do piso lento", root, zone.transform.position, WorldSize(collider), "#6088A0", -5);
+        }
+        foreach (Transform child in level.transform)
+            if (child.name.EndsWith(" trajetória", StringComparison.Ordinal))
+                child.GetComponent<SpriteRenderer>().color = new Color(.48f, .34f, .20f);
+    }
+
+    // A child sprite inherits the exact local box and its existing rotation/scale.
+    // The original physics transform and collider are never resized to accommodate art.
+    private static SpriteRenderer Fitted(string name, BoxCollider2D collider, Sprite sprite, bool rotated, int order)
+    {
+        var go = new GameObject(name, typeof(SpriteRenderer));
+        go.transform.SetParent(collider.transform, false);
+        go.transform.localPosition = new Vector3(collider.offset.x, collider.offset.y, -.02f);
+        go.transform.localRotation = Quaternion.Euler(0, 0, rotated ? 90 : 0);
+        var size = rotated ? new Vector2(collider.size.y, collider.size.x) : collider.size;
+        go.transform.localScale = new Vector3(size.x / sprite.bounds.size.x, size.y / sprite.bounds.size.y, 1);
+        var renderer = go.GetComponent<SpriteRenderer>();
+        renderer.sprite = sprite; renderer.sortingOrder = order; renderer.sharedMaterial = material;
+        return renderer;
+    }
+
+    private static void DressFinish(CourseLevel level, Transform root, Sprite floor)
+    {
+        var finish = level.GetComponentInChildren<FinishZone>(true);
+        finish.GetComponent<SpriteRenderer>().enabled = false;
+        var size = WorldSize(finish.GetComponent<BoxCollider2D>());
+        var graphic = Tiled("Piso da saída", root, floor, finish.transform.position, size, -5);
+        graphic.color = new Color(.36f, .67f, .52f);
+        Border("Sinalização da saída", root, finish.transform.position, size, "#78E3AD", -4);
+        var label = level.transform.Find("CHEGADA").GetComponent<TextMesh>();
+        label.text = "SAÍDA";
+        label.GetComponent<MeshRenderer>().sortingOrder = -3;
+    }
+
+    private static void DressLabels(CourseLevel level, Transform root)
+    {
+        if (!level.tutorial) return;
+        foreach (var text in level.GetComponentsInChildren<TextMesh>(true))
+        {
+            if (!text.gameObject.activeSelf || text.name == "CHEGADA" || text.GetComponentInParent<ChaserEnemy>() != null) continue;
+            if (text.name == "BARRA GIRATÓRIA") text.text = "BRAÇO GIRATÓRIO";
+            float textWidth = text.GetComponent<MeshRenderer>().bounds.size.x;
+            if (textWidth < .01f) textWidth = text.text.Length * text.characterSize * 4.5f;
+            float width = text.name == "APAGADA" ? 2.25f : Mathf.Max(2, textWidth + .4f);
+            if (text.name == "BARRA GIRATÓRIA") width = 3.5f;
+            Solid("Placa — " + text.name, root, text.transform.position, new Vector2(width, .42f), "#363A48", -4);
+            text.color = Color.white;
+            text.GetComponent<MeshRenderer>().sortingOrder = -3;
+        }
+    }
+
+    private static void Border(string name, Transform root, Vector2 center, Vector2 size, string color, int order)
+    {
+        const float width = .05f;
+        Solid(name + " superior", root, center + Vector2.up * (size.y - width) / 2, new Vector2(size.x, width), color, order);
+        Solid(name + " inferior", root, center - Vector2.up * (size.y - width) / 2, new Vector2(size.x, width), color, order);
+        Solid(name + " esquerda", root, center - Vector2.right * (size.x - width) / 2, new Vector2(width, size.y), color, order);
+        Solid(name + " direita", root, center + Vector2.right * (size.x - width) / 2, new Vector2(width, size.y), color, order);
+    }
+
+    private static Vector2 WorldSize(BoxCollider2D collider)
+    {
+        return Vector2.Scale(collider.size, collider.transform.lossyScale);
+    }
+
+    private static Sprite[] CharacterFrames(string name)
+    {
+        var atlas = Texture(Generated + name + ".png", 128);
         var columns = OccupiedBands(atlas, true);
         var rows = OccupiedBands(atlas, false);
         if (columns.Count != 4 || rows.Count != 4)
-            throw new InvalidOperationException("Prisoner.png precisa conter quatro linhas e quatro colunas separadas por transparência.");
+            throw new InvalidOperationException(name + ".png precisa conter quatro linhas e quatro colunas separadas por transparência.");
         var frames = new Sprite[16];
-        // Detect transparent gutters: generated sheets are not guaranteed to have equal cells.
-        // Equal quarters would cut feet and leak them into the following direction's frames.
         for (int row = 0; row < 4; row++)
         for (int column = 0; column < 4; column++)
         {
             Rect region = new Rect(columns[column].x, rows[row].x, columns[column].y, rows[row].y);
-            Rect bounds = AlphaBounds(atlas, region);
-            frames[row * 4 + column] = Slice(atlas, "Prisoner_" + row + "_" + column, bounds, 24,
+            frames[row * 4 + column] = Slice(atlas, name + "_" + row + "_" + column, AlphaBounds(atlas, region), 24,
                 new Vector2(.5f, .28f));
         }
-        var visual = new GameObject("Prisioneiro", typeof(SpriteRenderer));
-        visual.transform.SetParent(game.player.transform, false);
-        // Cancel the original square's .7 scale: collider dimensions stay exactly the same.
-        visual.transform.localScale = Vector3.one / .7f;
+        return frames;
+    }
+
+    private static PrisonCharacterVisual DressCharacter(GameController game, Transform body, SpriteRenderer prototype,
+        Sprite[] frames, string name)
+    {
+        var visual = new GameObject(name, typeof(SpriteRenderer));
+        visual.transform.SetParent(body, false);
+        visual.transform.localScale = new Vector3(1 / body.lossyScale.x, 1 / body.lossyScale.y, 1);
         visual.transform.localPosition = new Vector3(0, 0, -.02f);
         var renderer = visual.GetComponent<SpriteRenderer>();
         renderer.sprite = frames[0]; renderer.sortingOrder = 5; renderer.sharedMaterial = material;
-        var animation = game.player.gameObject.AddComponent<PrisonerVisual>();
-        animation.game = game; animation.prototype = game.player.visual;
+        prototype.enabled = false;
+        var animation = body.gameObject.AddComponent<PrisonCharacterVisual>();
+        animation.game = game; animation.prototype = prototype;
         animation.character = renderer; animation.frames = frames;
+        return animation;
     }
 
     private static Texture2D Texture(string path, int maxSize)
@@ -237,11 +336,12 @@ public static class PrisonArtBuilder
         return renderer;
     }
 
-    private static void Tiled(string name, Transform parent, Sprite sprite, Vector2 position, Vector2 size, int order)
+    private static SpriteRenderer Tiled(string name, Transform parent, Sprite sprite, Vector2 position, Vector2 size, int order)
     {
         var renderer = Draw(name, parent, sprite, position, sprite.bounds.size, order);
         renderer.drawMode = SpriteDrawMode.Tiled;
         renderer.size = size;
+        return renderer;
     }
 
     private static void Solid(string name, Transform parent, Vector2 position, Vector2 size, string color, int order)
