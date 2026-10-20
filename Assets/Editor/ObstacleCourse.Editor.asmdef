@@ -1,0 +1,1 @@
+{"name":"ObstacleCourse.Editor","references":["ObstacleCourse","Unity.InputSystem","Unity.ugui"],"includePlatforms":["Editor"]}

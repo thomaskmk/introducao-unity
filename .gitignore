@@ -122,3 +122,6 @@ InitTestScene*.unity*
 *.pfx
 *.keystore
 *.jks
+
+# Local test reports
+/TestResults/

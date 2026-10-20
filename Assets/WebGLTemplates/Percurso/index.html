@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{{ PRODUCT_NAME }}}</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101c2b;color:#eaf2f8;font-family:Arial,sans-serif}#frame{width:100%;height:100%;display:grid;place-items:center}canvas{width:100%;height:100%;display:block;outline:none}#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;background:#101c2b}#loading strong{font-size:22px;letter-spacing:2px}progress{width:280px;height:8px;accent-color:#68e6c1}#message{font-size:14px;color:#a5b7c7;max-width:85%;text-align:center}#fullscreen{position:fixed;right:12px;bottom:10px;border:1px solid #52677c;border-radius:5px;background:#172a3a;color:#eaf2f8;padding:6px 9px;font-size:11px;cursor:pointer;opacity:.8}#fullscreen:hover{opacity:1}
+</style>
+</head>
+<body>
+<div id="frame"><canvas id="unity-canvas" width="1280" height="720" tabindex="0" aria-label="Percurso de obstáculos. Use WASD ou setas para mover. Enter confirma e Escape pausa."></canvas></div>
+<div id="loading"><strong>CONTRA O RELÓGIO</strong><progress id="progress" max="1" value="0"></progress><div id="message">Preparando o percurso…</div></div>
+<button id="fullscreen" type="button" aria-label="Abrir jogo em tela cheia">Tela cheia</button>
+<script>
+const canvas=document.getElementById('unity-canvas');
+const config={autoSyncPersistentDataPath:true,dataUrl:'Build/{{{ DATA_FILENAME }}}',frameworkUrl:'Build/{{{ FRAMEWORK_FILENAME }}}',codeUrl:'Build/{{{ CODE_FILENAME }}}',streamingAssetsUrl:'StreamingAssets',companyName:{{{ JSON.stringify(COMPANY_NAME) }}},productName:{{{ JSON.stringify(PRODUCT_NAME) }}},productVersion:{{{ JSON.stringify(PRODUCT_VERSION) }}},showBanner:(message,type)=>{if(type==='error'){document.getElementById('loading').style.display='flex';document.getElementById('message').textContent=message;}}};
+const script=document.createElement('script');script.src='Build/{{{ LOADER_FILENAME }}}';
+script.onload=()=>createUnityInstance(canvas,config,p=>document.getElementById('progress').value=p).then(instance=>{document.getElementById('loading').style.display='none';canvas.focus();document.getElementById('fullscreen').onclick=()=>instance.SetFullscreen(1);}).catch(error=>{document.getElementById('message').textContent='Não foi possível carregar o jogo. Recarregue a página.';console.error(error);});
+script.onerror=()=>{document.getElementById('message').textContent='Falha ao baixar o jogo. Verifique a conexão e recarregue.';};
+document.body.appendChild(script);canvas.addEventListener('pointerdown',()=>canvas.focus());
+</script>
+</body>
+</html>
