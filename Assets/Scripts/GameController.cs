@@ -16,7 +16,7 @@ namespace ObstacleCourse
         public bool ChallengeUnlocked => PlayerPrefs.GetInt("ObstacleCourse.ChallengeUnlocked.v2", 0) == 1;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
         public string Hint => IsPlaying && Time.time < noticeUntil ? notice : Level.Hint(player.Position);
-        private string BestTimeKey => "ObstacleCourse.BestTime.v2." + LevelIndex;
+        private string BestTimeKey => "ObstacleCourse.BestTime.v" + Level.layoutVersion + "." + LevelIndex;
         private RunState displayedState = (RunState)(-1);
         private string notice;
         private float noticeUntil;

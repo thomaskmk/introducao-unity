@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class NewMechanicsTests
     {
         private GameController game;
-        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v2.1" };
+        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v3.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] values = new float[3];
         [UnitySetUp] public IEnumerator Load()
@@ -124,7 +124,7 @@ namespace ObstacleCourse.Tests
             Assert.IsFalse(game.ChallengeUnlocked);
             game.Session.CollectLife(); game.ReachFinish(); game.PrimaryAction(); yield return null;
             Assert.AreEqual(1,game.LevelIndex); Assert.IsTrue(game.ChallengeUnlocked);
-            Assert.AreEqual(1,game.Session.Lives); Assert.AreEqual(32,game.Session.Duration);
+            Assert.AreEqual(1,game.Session.Lives); Assert.AreEqual(20,game.Session.Duration);
             Assert.IsFalse(game.levels[0].gameObject.activeSelf); Assert.IsTrue(game.levels[1].gameObject.activeSelf);
             game.TakeDamage(); Assert.AreEqual(RunState.Lost,game.Session.State);
             game.PrimaryAction(); yield return null;
@@ -145,6 +145,60 @@ namespace ObstacleCourse.Tests
             yield return new WaitForSecondsRealtime(.15f);
             Assert.AreEqual(position,enemy.GetComponent<Rigidbody2D>().position);
             Assert.AreEqual(phase,trap.Phase); Assert.AreEqual(remaining,game.Session.Remaining);
+        }
+        [UnityTest] public IEnumerator RotatingBarHitsStationaryPlayerWithItsMovingCollider()
+        {
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
+            var rotor=game.Level.rotors[0];
+            Place((Vector2)rotor.transform.position+Vector2.up*1.5f);
+            float deadline=Time.realtimeSinceStartup+3;
+            while(game.IsPlaying && Time.realtimeSinceStartup<deadline) yield return null;
+            Assert.AreEqual(RunState.Lost,game.Session.State,"A barra deve atingir o jogador durante o giro.");
+        }
+        [UnityTest] public IEnumerator RotorsPauseResetAndPendulumReverses()
+        {
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
+            var rotor=game.Level.rotors[0]; var pendulum=game.Level.rotors[1];
+            var rb=rotor.GetComponent<Rigidbody2D>(); var pb=pendulum.GetComponent<Rigidbody2D>();
+            float initial=rb.rotation;
+            yield return new WaitForSeconds(.15f);
+            Assert.Greater(Mathf.Abs(Mathf.DeltaAngle(initial,rb.rotation)),5);
+            game.TogglePause();
+            float stopped=rb.rotation; float stoppedPendulum=pb.rotation;
+            yield return new WaitForSecondsRealtime(.15f);
+            Assert.AreEqual(stopped,rb.rotation); Assert.AreEqual(stoppedPendulum,pb.rotation);
+            game.TogglePause();
+            // Posicione o relógio em lados opostos da reversão e observe a física real.
+            game.Session.Tick(pendulum.period/4-game.Session.Elapsed);
+            yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+            float peak=pb.rotation;
+            game.Session.Tick(pendulum.period/4);
+            yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+            Assert.Greater(peak-pb.rotation,30);
+            Assert.That(pb.rotation,Is.InRange(pendulum.initialAngle-pendulum.amplitude-1,pendulum.initialAngle+pendulum.amplitude+1));
+            game.StartRun();
+            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(rotor.initialAngle,rb.rotation)),.01f);
+            Assert.Less(Mathf.Abs(Mathf.DeltaAngle(pendulum.initialAngle,pb.rotation)),.01f);
+        }
+        [UnityTest] public IEnumerator ChallengeLifeRequiresEnteringTrapAlcove()
+        {
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
+            var pickup=game.Level.pickups[0]; var trap=game.Level.traps[0];
+            Assert.Greater(Vector2.Distance(game.Level.spawn,pickup.transform.position),10);
+            // As laterais do nicho são paredes; a abertura superior é a armadilha.
+            int walls=1<<8;
+            Assert.IsTrue(Physics2D.Linecast((Vector2)pickup.transform.position+Vector2.left*3,pickup.transform.position,walls));
+            Assert.IsTrue(Physics2D.Linecast((Vector2)pickup.transform.position+Vector2.right*3,pickup.transform.position,walls));
+            game.Session.Tick(trap.safeSeconds+trap.warningSeconds+.1f);
+            Place(trap.transform.position);
+            yield return new WaitForFixedUpdate(); yield return null;
+            Assert.AreEqual(RunState.Lost,game.Session.State);
+            Assert.IsFalse(pickup.Collected,"O dano deve acontecer antes da coleta.");
+            game.StartRun();
+            Place(trap.transform.position); yield return new WaitForFixedUpdate();
+            Assert.IsTrue(game.IsPlaying);
+            Place(pickup.transform.position); yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+            Assert.IsTrue(pickup.Collected); Assert.AreEqual(2,game.Session.Lives);
         }
     }
 }

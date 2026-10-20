@@ -2,20 +2,22 @@
 
 Protótipo de um jogo 2D visto de cima, desenvolvido para a disciplina de Jogos e Interação do Insper com **Unity 6.3 LTS (6000.3.26f1)** e o modelo Universal 2D.
 
-Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite as patrulhas laranja. Coletar itens não é condição de vitória.
+Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite os obstáculos móveis e o perseguidor. Coletar itens não é condição de vitória.
 
 ## Duas fases
 
-- **Tutorial (90 segundos):** mantém o percurso inicial, apresenta blocos móveis, vida extra, armadilha cíclica, piso lento e um perseguidor. Dicas mudam conforme o trecho.
-- **Desafio (32 segundos):** quatro paredes, três blocos móveis, dois perseguidores, três armadilhas e dois pisos lentos. A passagem central da segunda parede é um atalho perigoso; a passagem inferior é segura e mais lenta.
+- **Tutorial (90 segundos):** mantém o percurso inicial, apresenta blocos móveis, vida extra, armadilha cíclica, piso lento e um perseguidor. Dicas mudam conforme o trecho. No primeiro bloco móvel, a passagem por cima dá mais margem; passar por baixo encurta o caminho, mas exige esperar a abertura.
+- **Desafio (20 segundos):** duas rotas horizontais. O corredor superior tem piso lento e menos risco; o atalho central reúne uma barra giratória, um pêndulo e um perseguidor. A única vida extra fica em um nicho da rota arriscada, atrás de uma armadilha cíclica. As rotas se unem antes de um pistão vertical que protege a chegada.
 - Cada tentativa começa com **uma vida**. Existe **uma vida extra opcional por fase**, com limite de duas vidas. Vencer depende somente de alcançar a chegada a tempo.
 - Ao sobreviver a um impacto, o jogador permanece no lugar e fica invulnerável por **1,5 segundo**, piscando. É possível gastar a vida extra para atravessar um perigo mais rápido. Piso lento continua reduzindo a velocidade durante a proteção.
 - Reiniciar restaura o tempo, a vida inicial, o item e os inimigos da fase atual. Vidas não passam de uma fase para outra.
-- Terminar o tutorial libera o desafio, inclusive pelo menu em visitas seguintes no mesmo navegador. Recordes são separados por fase.
+- Terminar o tutorial libera o desafio, inclusive pelo menu em visitas seguintes no mesmo navegador. Recordes são separados por fase e versão do percurso; o novo desafio não usa os tempos do antigo zigue-zague.
 - Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle; o controle ainda precisa de teste com dispositivo físico.
 - Build WebGL com carregamento e botão de tela cheia.
 
 A arte permanece geométrica e provisória. Arte temática, música, efeitos sonoros e refinamento de dificuldade ficam para as próximas etapas. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
+
+Limitação conhecida na prévia WebGL: a primeira parede do tutorial não é desenhada, embora mantenha colisão. O defeito já aparecia na versão anterior e está registrado no [guia de desenvolvimento](docs/DESENVOLVIMENTO.md#limitação-visual-observada).
 
 ## Controles
 
@@ -53,7 +55,7 @@ bash scripts/package-web.sh
 
 Para outra instalação, defina `UNITY_EDITOR` com o caminho do executável. Os relatórios ficam em `TestResults/` e a versão WebGL em `Builds/WebGL/`. Não há automação de Local Environment do Codex configurada; esses comandos são o fluxo documentado do projeto.
 
-Os testes cobrem regras da partida, vida extra e invulnerabilidade, progressão entre fases, reinício, pausa, ciclo das armadilhas, piso lento, perseguição e colisões reais. Os relatórios do Test Runner indicam os resultados de cada execução.
+Os testes cobrem regras da partida, vida extra e invulnerabilidade, progressão entre fases, reinício, pausa, ciclo das armadilhas, piso lento, perseguição, dano da barra em movimento, reversão do pêndulo, passagem inferior do tutorial e colisões reais. Os relatórios do Test Runner indicam os resultados de cada execução.
 
 ## Publicação
 

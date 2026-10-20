@@ -108,7 +108,9 @@ public static class CourseBuilder
         var level = root.AddComponent<CourseLevel>();
         level.title = tutorial ? "Tutorial" : "Desafio";
         level.tutorial = tutorial;
-        level.timeLimit = tutorial ? 90 : 32;
+        level.timeLimit = tutorial ? 90 : 20;
+        level.layoutVersion = tutorial ? 2 : 3;
+        level.spawn = tutorial ? new Vector2(-13,-4.5f) : new Vector2(-13,0);
         var arena = root.transform;
         Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
         for(int i=-14;i<=14;i++) Box("Grade vertical",arena,new Vector2(i,0),new Vector2(.018f,12),Hex("203449"),-9);
@@ -118,19 +120,21 @@ public static class CourseBuilder
         Wall("Limite esquerdo",arena,new Vector2(-15,0),new Vector2(.3f,12.6f));
         Wall("Limite direito",arena,new Vector2(15,0),new Vector2(.3f,12.6f));
         Box("Área inicial",arena,level.spawn,new Vector2(2.3f,2.2f),Hex("24465A"),-8);
-        WorldText("INÍCIO",arena,new Vector2(-13,-3.05f),.06f,Muted);
-        var goal=Box("Chegada",arena,new Vector2(13,4.6f),new Vector2(2.5f,2.2f),Hex("287860"),-8);
+        WorldText("INÍCIO",arena,level.spawn+new Vector2(0,1.45f),.06f,Muted);
+        var finish = tutorial ? new Vector2(13,4.6f) : new Vector2(13,0);
+        var goal=Box("Chegada",arena,finish,new Vector2(2.5f,2.2f),Hex("287860"),-8);
         goal.AddComponent<BoxCollider2D>().isTrigger=true;
         goal.AddComponent<FinishZone>().game=game;
-        WorldText("CHEGADA",arena,new Vector2(13,4.6f),.055f,Color.white);
+        WorldText("CHEGADA",arena,finish,.055f,Color.white);
 
         if (tutorial)
         {
             Wall("Parede 01 — passe por cima",arena,new Vector2(-6,-1.25f),new Vector2(.8f,9.5f));
             Wall("Parede 02 — passe por baixo",arena,new Vector2(3,1.25f),new Vector2(.8f,9.5f));
-            WorldText("PASSE POR CIMA  >",arena,new Vector2(-6,5.6f),.045f,Mint);
+            WorldText("POR CIMA: MAIS SEGURO  >",arena,new Vector2(-6,5.6f),.037f,Mint);
+            WorldText("POR BAIXO: ATALHO  >",arena,new Vector2(-6,3.85f),.035f,Mint);
             WorldText("PASSE POR BAIXO  >",arena,new Vector2(3,-5.6f),.045f,Mint);
-            WorldText("01 / MOVIMENTO",arena,new Vector2(-11,3.1f),.045f,Muted);
+            WorldText("01 / DUAS PASSAGENS",arena,new Vector2(-11,2.6f),.045f,Muted);
             WorldText("02 / OBSERVE O CICLO",arena,new Vector2(-1,3.6f),.045f,Muted);
             WorldText("03 / ATRAIA E DESVIE",arena,new Vector2(9,-4.9f),.045f,Muted);
             level.blocks=new[] {
@@ -144,38 +148,63 @@ public static class CourseBuilder
         }
         else
         {
-            Wall("Parede 01 — cima",arena,new Vector2(-9,-1.25f),new Vector2(.8f,9.5f));
-            // A segunda parede oferece um atalho no meio; a passagem inferior é segura e lenta.
-            Wall("Parede 02 superior",arena,new Vector2(-3,3.45f),new Vector2(.8f,5.1f));
-            Wall("Parede 02 inferior",arena,new Vector2(-3,-2.2f),new Vector2(.8f,2.6f));
-            Wall("Parede 03 — cima",arena,new Vector2(3,-1.25f),new Vector2(.8f,9.5f));
-            Wall("Parede 04 — baixo",arena,new Vector2(9,1.25f),new Vector2(.8f,9.5f));
-            WorldText("ATALHO >",arena,new Vector2(-5.1f,.9f),.045f,Mint);
-            WorldText("ROTA SEGURA >",arena,new Vector2(-5.5f,-5.4f),.04f,Muted);
-            WorldText(">",arena,new Vector2(-9,5.6f),.06f,Mint);
-            WorldText(">",arena,new Vector2(3,5.6f),.06f,Mint);
-            WorldText(">",arena,new Vector2(9,-5.6f),.06f,Mint);
+            // Duas rotas horizontais se encontram antes do pistão final.
+            Box("Rota central",arena,new Vector2(-1,-.3f),new Vector2(19,5.3f),Hex("303342"),-8);
+            Wall("Separador das rotas",arena,new Vector2(-.7f,2.4f),new Vector2(16.6f,.5f));
+            Wall("Fim do corredor superior",arena,new Vector2(9.4f,4.35f),new Vector2(.5f,3.3f));
+            Wall("Base esquerda",arena,new Vector2(-8.3f,-4.5f),new Vector2(13.4f,3));
+            Wall("Base direita",arena,new Vector2(8.3f,-4.5f),new Vector2(13.4f,3));
+            Wall("Pistão — estrutura superior",arena,new Vector2(12.6f,3.6f),new Vector2(4.8f,4.8f));
+            Wall("Pistão — estrutura inferior",arena,new Vector2(12.6f,-2.1f),new Vector2(4.8f,1.8f));
+            WorldText("ROTA LONGA / MENOS RISCO  >",arena,new Vector2(-1,5.45f),.045f,Mint);
+            WorldText("ATALHO / MAIS RISCO  >",arena,new Vector2(-5.4f,1.7f),.04f,Orange);
+            WorldText("GIRO COMPLETO",arena,new Vector2(-4.7f,-2.65f),.035f,Muted);
+            WorldText("PÊNDULO",arena,new Vector2(4.3f,1.7f),.04f,Muted);
+            WorldText("DESVIO OPCIONAL",arena,new Vector2(0,-5.65f),.032f,Muted);
+            WorldText("V",arena,new Vector2(8.35f,3.2f),.065f,Mint);
             level.blocks=new[] {
-                Hazard("Bloco inicial",arena,game,new Vector2(-12,4.65f),new Vector2(-7.5f,4.65f),new Vector2(1.1f,1.1f),2.6f,0),
-                Hazard("Bloco central",arena,game,new Vector2(.5f,4.65f),new Vector2(5,4.65f),new Vector2(1.2f,1.1f),3,1),
-                Hazard("Bloco final",arena,game,new Vector2(10.5f,1.5f),new Vector2(14,1.5f),new Vector2(1.2f,1.2f),3.4f,1)
+                Hazard("Pistão vertical",arena,game,new Vector2(10.8f,-2.1f),new Vector2(10.8f,2.1f),new Vector2(.65f,1.4f),3.2f,0)
+            };
+            level.rotors=new[] {
+                Rotor("Barra giratória",arena,game,new Vector2(-4.7f,-.4f),4.3f,0,false),
+                Rotor("Pêndulo",arena,game,new Vector2(4.3f,-.4f),4.3f,90,true)
             };
             level.traps=new[] {
-                Trap(arena,game,new Vector2(-3,0),new Vector2(1.6f,1.8f),.7f,.8f,4.5f,1.5f),
-                Trap(arena,game,new Vector2(-.1f,2),new Vector2(5.1f,.9f),1.4f,.9f,2.7f,0),
-                Trap(arena,game,new Vector2(6.1f,-3),new Vector2(4.9f,.9f),1.8f,.9f,2.5f,1.2f)
+                Trap(arena,game,new Vector2(0,-3.5f),new Vector2(3.1f,.9f),1.2f,.7f,2.3f,0)
             };
-            level.slowZones=new[] {
-                Slow(arena,new Vector2(-6,-3.25f),new Vector2(4.9f,3.4f),.45f),
-                Slow(arena,new Vector2(6.1f,1.6f),new Vector2(4.9f,2),.55f)
-            };
+            level.slowZones=new[] { Slow(arena,new Vector2(-.25f,4.4f),new Vector2(15.5f,3.2f),.35f) };
             level.enemies=new[] {
-                Enemy(arena,game,new Vector2(-7,2),new Vector2(-5,2),new Rect(-8.1f,-.8f,4.2f,6.1f),3.8f),
-                Enemy(arena,game,new Vector2(5,-.4f),new Vector2(7,-.4f),new Rect(3.9f,-2.1f,4.2f,7.3f),3.7f)
+                Enemy(arena,game,new Vector2(3,-1.6f),new Vector2(6,-1.6f),new Rect(1.9f,-2.5f,5,4.3f),3.6f)
             };
-            level.pickups=new[] { Pickup(arena,game,new Vector2(-13.6f,1.4f)) };
+            level.pickups=new[] { Pickup(arena,game,new Vector2(0,-4.8f)) };
         }
         return level;
+    }
+
+    private static RotatingHazard Rotor(string name,Transform parent,GameController game,Vector2 center,float length,float angle,bool oscillates)
+    {
+        // Marcas estáticas indicam o espaço varrido pela barra.
+        for(int i=0;i<40;i++)
+        {
+            float degrees=i*9;
+            if(oscillates && !((degrees>=35 && degrees<=145) || (degrees>=215 && degrees<=325))) continue;
+            float radians=degrees*Mathf.Deg2Rad;
+            Box(name+" trajetória",parent,center+new Vector2(Mathf.Cos(radians),Mathf.Sin(radians))*length/2,
+                new Vector2(.07f,.07f),Hex("815340"),-7);
+        }
+        var go=new GameObject(name,typeof(Rigidbody2D));
+        go.transform.SetParent(parent); go.transform.position=center;
+        var body=go.GetComponent<Rigidbody2D>(); body.bodyType=RigidbodyType2D.Kinematic;
+        body.interpolation=RigidbodyInterpolation2D.Interpolate;
+        var bar=Box("Barra",parent,center,new Vector2(length,.32f),oscillates?Hex("FFC166"):Orange,4);
+        bar.AddComponent<BoxCollider2D>().isTrigger=true;
+        bar.transform.SetParent(go.transform,true);
+        var pivot=Box("Eixo",parent,center,new Vector2(.5f,.5f),Hex("FFF0D4"),5);
+        pivot.transform.SetParent(go.transform,true);
+        go.transform.rotation=Quaternion.Euler(0,0,angle);
+        var hazard=go.AddComponent<RotatingHazard>(); hazard.game=game;
+        hazard.initialAngle=angle; hazard.oscillates=oscillates;
+        return hazard;
     }
 
     private static CycleTrap Trap(Transform parent,GameController game,Vector2 position,Vector2 size,float safe,float warning,float active,float offset)

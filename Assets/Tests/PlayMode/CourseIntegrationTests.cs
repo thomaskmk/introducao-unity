@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class CourseIntegrationTests
     {
         private GameController game;
-        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v2.1" };
+        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v3.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] saved = new float[3];
         [UnitySetUp] public IEnumerator LoadCourse()
@@ -68,6 +68,28 @@ namespace ObstacleCourse.Tests
             for(int i=0;i<5;i++) yield return new WaitForFixedUpdate();
             Assert.AreEqual(1,game.Session.Lives);
             game.player.TouchHazard(); Assert.AreEqual(1,game.Session.Lives);
+        }
+        [UnityTest] public IEnumerator TutorialLowerPassageWorksOnlyWhenBlockLeavesAnOpening()
+        {
+            game.StartRun(); game.player.enabled=false;
+            var player=game.player.GetComponent<Rigidbody2D>();
+            var block=game.Level.blocks[0]; block.enabled=false;
+            var obstacle=block.GetComponent<Rigidbody2D>();
+            obstacle.position=new Vector2(-9,4.65f);
+            player.position=new Vector2(-7,3.95f); player.linearVelocity=Vector2.right*5;
+            Physics2D.SyncTransforms();
+            float deadline=Time.realtimeSinceStartup+2;
+            while(game.IsPlaying && player.position.x<-5.1f && Time.realtimeSinceStartup<deadline) yield return null;
+            Assert.IsTrue(game.IsPlaying);
+            Assert.Greater(player.position.x,-5.1f,"A passagem inferior deve contornar o topo da parede.");
+            Assert.AreEqual(1,game.Session.Lives);
+            game.StartRun();
+            obstacle.position=new Vector2(-6,4.65f);
+            player.position=new Vector2(-7,3.95f); player.linearVelocity=Vector2.right*5;
+            Physics2D.SyncTransforms();
+            deadline=Time.realtimeSinceStartup+2;
+            while(game.IsPlaying && Time.realtimeSinceStartup<deadline) yield return null;
+            Assert.AreEqual(RunState.Lost,game.Session.State,"Sem abertura, a passagem inferior deve causar impacto.");
         }
         [UnityTest] public IEnumerator FinishTriggerWinsAndFreezesTheClock()
         {
