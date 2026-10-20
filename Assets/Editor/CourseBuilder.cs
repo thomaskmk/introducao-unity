@@ -308,6 +308,7 @@ public static class CourseBuilder
         scaler.referenceResolution=new Vector2(1600,900);
         scaler.screenMatchMode=CanvasScaler.ScreenMatchMode.Expand;
         var hud=canvasGo.GetComponent<CourseHud>(); game.hud=hud;
+        BuildMenuBackground(hud,canvasGo.transform);
         var layout=Rect("Layout centralizado",canvasGo.transform,Vector2.zero,new Vector2(1600,900));
         layout.anchorMin=layout.anchorMax=new Vector2(.5f,.5f);
         var root=Rect("Durante a partida",layout,new Vector2(800,450),new Vector2(1600,900));
@@ -357,6 +358,28 @@ public static class CourseBuilder
         var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));
         events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
         EditorUtility.SetDirty(events);
+    }
+    private static void BuildMenuBackground(CourseHud hud,Transform canvas)
+    {
+        const string path="Assets/Art/Prison/Menu/PrisonEscapeBackground.png";
+        var importer=(TextureImporter)AssetImporter.GetAtPath(path);
+        importer.textureType=TextureImporterType.Default;
+        importer.npotScale=TextureImporterNPOTScale.None;
+        importer.mipmapEnabled=false;
+        importer.filterMode=FilterMode.Point;
+        importer.wrapMode=TextureWrapMode.Clamp;
+        importer.maxTextureSize=2048;
+        importer.textureCompression=TextureImporterCompression.Uncompressed;
+        importer.SaveAndReimport();
+        var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        var rect=Rect("Arte do menu",canvas,Vector2.zero,Vector2.zero);
+        var image=rect.gameObject.AddComponent<RawImage>();
+        image.texture=texture; image.raycastTarget=false;
+        // Cover the whole viewport without stretching the illustration, including wider windows.
+        var fit=rect.gameObject.AddComponent<AspectRatioFitter>();
+        fit.aspectMode=AspectRatioFitter.AspectMode.EnvelopeParent;
+        fit.aspectRatio=(float)texture.width/texture.height;
+        hud.menuBackground=rect.gameObject;
     }
     private static void BuildTutorialIntroduction(GameController game,CourseHud hud,Transform canvas,RectTransform header)
     {

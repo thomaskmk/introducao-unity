@@ -13,6 +13,7 @@ namespace ObstacleCourse
         public TutorialIntroduction introduction;
         public Button tutorial;
         public GameObject gameplayUI;
+        public GameObject menuBackground;
         public Image timerFill;
         public GameObject overlay;
         public Text title;
@@ -52,6 +53,7 @@ namespace ObstacleCourse
         {
             var run = game.Session;
             bool introducing = run.State == RunState.Introduction;
+            menuBackground.SetActive(run.State == RunState.Menu);
             introduction.gameObject.SetActive(introducing);
             bool show = run.State != RunState.Playing && !introducing;
             overlay.SetActive(show);
@@ -72,7 +74,7 @@ namespace ObstacleCourse
             starCaption.text = StarText(game.EarnedStars);
             starTargets.gameObject.SetActive(won);
             var shade = overlay.GetComponent<Image>();
-            var shadeColor = shade.color; shadeColor.a = menu ? 1 : .91f; shade.color = shadeColor;
+            var shadeColor = shade.color; shadeColor.a = menu ? 0 : .91f; shade.color = shadeColor;
             starTargets.text = Targets(game.Level);
             ApplyLayout(run.State);
             result.text = "";
@@ -114,9 +116,20 @@ namespace ObstacleCourse
             bool paused = state == RunState.Paused;
             bool won = state == RunState.Won;
             bool lost = state == RunState.Lost;
-            float width = paused ? 640 : state == RunState.Menu ? 780 : 880;
-            float height = paused ? 300 : lost ? 520 : state == RunState.Menu ? 550 : 690;
+            bool menu = state == RunState.Menu;
+            float width = paused ? 640 : menu ? 660 : 880;
+            float height = paused ? 300 : lost ? 520 : menu ? 560 : 690;
+            // The menu sits in the illustration's quiet left side; all other modals stay centered.
+            card.anchorMin = card.anchorMax = new Vector2(.5f, .5f);
+            card.anchoredPosition = menu ? new Vector2(-435, 20) : Vector2.zero;
             card.sizeDelta = new Vector2(width, height);
+            var panel = card.GetComponent<Image>();
+            var panelColor = panel.color; panelColor.a = menu ? 0 : 1; panel.color = panelColor;
+            accent.gameObject.SetActive(!menu);
+            Color menuGold = new Color(.945f, .804f, .471f);
+            title.color = menu ? new Color(1, .94f, .82f) : Color.white;
+            subtitle.color = menuGold;
+            primary.GetComponent<Image>().color = menu ? menuGold : normalColor;
             Place(accent.rectTransform, width / 2, height - 3, width, 6);
             accent.color = lost ? dangerColor : won ? stars.earnedColor : normalColor;
             if (paused)
@@ -151,11 +164,11 @@ namespace ObstacleCourse
             }
             else
             {
-                title.fontSize = 66; subtitle.fontSize = 22;
-                Place(title.rectTransform, 390, 410, 700, 170);
-                Place(subtitle.rectTransform, 390, 290, 700, 35);
-                Place(primary.GetComponent<RectTransform>(), 390, 188, 410, 68);
-                Place(tutorial.GetComponent<RectTransform>(), 390, 101, 270, 48);
+                title.fontSize = 80; subtitle.fontSize = 24;
+                Place(title.rectTransform, 330, 410, 620, 150);
+                Place(subtitle.rectTransform, 330, 315, 620, 40);
+                Place(primary.GetComponent<RectTransform>(), 330, 205, 350, 72);
+                Place(tutorial.GetComponent<RectTransform>(), 330, 115, 240, 50);
             }
             // Button labels are centered independently of the changing card/button dimensions.
             FitButtonLabel(primary);
