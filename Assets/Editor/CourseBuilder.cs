@@ -70,6 +70,7 @@ public static class CourseBuilder
         tagSettings.ApplyModifiedPropertiesWithoutUndo();
         manager.levels=new[] { BuildLevel(manager,true), BuildLevel(manager,false) };
         manager.levels[1].gameObject.SetActive(false);
+        PrisonArtBuilder.Apply(manager);
         BuildHud(manager);
         EditorSceneManager.SaveScene(scene,ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};

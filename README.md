@@ -13,7 +13,7 @@ Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite os ob
 - Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle; o controle ainda precisa de teste com dispositivo físico.
 - Build WebGL com carregamento e botão de tela cheia.
 
-A arte permanece geométrica e provisória. Arte temática, música, efeitos sonoros e refinamento de dificuldade ficam para as próximas etapas. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
+O primeiro setor do tutorial tem um teste de pixel art com tema de fuga da prisão: piso e parede da LimeZu, prisioneiro animado e máquinas com artes geradas. O restante do percurso mantém a arte geométrica provisória. Música, efeitos sonoros e refinamento de dificuldade ficam para as próximas etapas. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
 
 ## Controles
 
@@ -31,10 +31,23 @@ Ao perder o foco, a partida pausa. O recorde fica salvo somente no navegador ou 
 1. Instale o Unity Editor **6000.3.26f1** pelo Unity Hub.
 2. Instale o módulo **WebGL Build Support** para gerar a versão de navegador.
 3. Clone o repositório e selecione sua pasta em **Add project from disk** no Hub.
-4. Aguarde a importação e abra `Assets/Scenes/Percurso.unity`.
-5. Pressione Play e, no menu, **Começar**.
+4. Para o teste visual, importe o pacote gratuito conforme as instruções abaixo.
+5. Aguarde a importação e abra `Assets/Scenes/Percurso.unity`.
+6. Pressione Play e, no menu, **Começar**.
 
 A cena já está pronta e pode ser modificada pela Hierarchy e pelo Inspector. Veja [o guia de desenvolvimento](docs/DESENVOLVIMENTO.md) para localizar cada componente e suas configurações.
+
+## Artes do teste visual
+
+Baixe **Modern_Interiors_Free_v2.2.zip** em [Modern Interiors, por LimeZu](https://limezu.itch.io/moderninteriors), usando o download gratuito. Importe no projeto:
+
+```sh
+python3 scripts/import-modern-interiors.py ~/Downloads/Modern_Interiors_Free_v2.2.zip
+```
+
+Os PNGs da LimeZu ficam somente na cópia local, em `Assets/Art/Licensed/ModernInteriors`, e são ignorados pelo Git. Seus `.meta` e os recortes usados pela cena são versionados para restaurar as referências após a importação. Um clone novo precisa dessa importação antes de abrir a cena ou gerar o build com arte. A licença gratuita permite uso e edição em **projetos não comerciais**.
+
+As três imagens geradas estão em `Assets/Art/Prison/Generated`. Os prompts e a descrição do teste estão em [docs/ARTE.md](docs/ARTE.md). A reconstrução pelo menu **Percurso > Reconstruir as duas fases** aplica automaticamente o teste quando os arquivos necessários estão presentes; sem o pacote, reconstrói o protótipo geométrico.
 
 ## Testes e build
 
@@ -68,6 +81,8 @@ O código está no [repositório público](https://github.com/thomaskmk/introduc
 - [Enunciado do projeto](https://docs.google.com/document/d/1fy-NeFFVT3tUe1lplrUzKLuoy-goAoKWvLZV1D5I__Y/edit).
 - Código do protótipo e gráficos geométricos: produzidos com apoio do **Codex/OpenAI**. O responsável pelo projeto deve revisar e compreender os scripts.
 - Cena e recursos iniciais, fonte interna e pacotes: **Unity Technologies**, modelo Universal 2D.
+- Cenário do teste visual: **[LimeZu — Modern Interiors Free v2.2](https://limezu.itch.io/moderninteriors)**. Uso não comercial; licença original em `Assets/Art/Licensed/ModernInteriors/LICENSE.txt`. Os créditos também aparecem no tutorial jogável.
+- Prisioneiro e duas máquinas: imagens geradas com **OpenAI imagegen** usando o pacote como referência visual; preparação e integração no Unity com apoio do Codex.
 - Regras de exclusão baseadas no [Unity.gitignore do GitHub](https://github.com/github/gitignore/blob/main/Unity.gitignore).
 
-Não foram usados assets externos de jogos comerciais. Novos recursos de arte e áudio deverão receber créditos quando forem incorporados.
+The Escapists foi uma referência de direção visual; nenhum arquivo do jogo foi extraído ou incorporado. Novos recursos de arte e áudio deverão receber créditos quando forem incorporados.

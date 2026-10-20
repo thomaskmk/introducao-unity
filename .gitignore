@@ -125,3 +125,6 @@ InitTestScene*.unity*
 
 # Local test reports
 /TestResults/
+
+# Download licensed art from its author; keep metadata for stable Unity references.
+/Assets/Art/Licensed/**/*.png
