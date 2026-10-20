@@ -8,26 +8,23 @@ WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerd
 
 ## Regras
 
-Cada tentativa começa com uma vida. A cruz rosa é uma vida extra opcional, consumida uma vez por tentativa. Após a coleta, o primeiro impacto deixa uma vida e concede 1,5 segundo de proteção, sinalizada pelo personagem piscando. O personagem não volta ao início nem perde velocidade por causa do impacto. Um novo dano após a proteção encerra a partida.
+Cada tentativa começa com uma vida. Um impacto encerra a partida imediatamente; não há vida extra nem invulnerabilidade. Reiniciar reposiciona os inimigos, os obstáculos e o jogador, restaura o relógio e devolve uma vida. Perder no desafio não obriga a repetir o tutorial.
 
-A vida extra não é uma chave para a chegada. Pode ser ignorada ou usada para economizar tempo atravessando uma armadilha ativa. A proteção não elimina o efeito do piso lento. Reiniciar recupera o item, reposiciona os inimigos, reseta as armadilhas e devolve apenas a vida inicial. Perder no desafio não obriga a repetir o tutorial.
+O tutorial tem 90 segundos e o desafio 38. Esses valores devem ser refinados com jogadores. No tutorial, é possível passar por cima ou por baixo do primeiro bloco móvel. A passagem inferior é mais curta e exige sincronizar o movimento com o bloco; ainda é necessário contornar o topo da parede. Uma barra gira continuamente no primeiro setor; um pêndulo oscila no segundo. O guarda fica parado num vão de 1,2 unidades, sem espaço para passar ao lado: aproxime-se para atraí-lo, recue e contorne-o antes de atravessar o vão.
 
-O tutorial tem 90 segundos e o desafio 20. Esses valores devem ser refinados com jogadores. No tutorial, é possível passar por cima ou por baixo do primeiro bloco móvel. A passagem inferior é mais curta e exige sincronizar o movimento com o bloco; ainda é necessário contornar o topo da parede.
-
-O desafio tem duas rotas horizontais: corredor superior lento, com menos risco, e atalho central com barra giratória, pêndulo e perseguidor. A vida extra fica em um nicho abaixo do atalho, acessível somente pela armadilha cíclica. O retorno pelo mesmo nicho também exige observar o ciclo (ou gastar a vida recém-coletada). As duas rotas terminam em um pistão vertical antes da chegada. A vitória final é chegar à área verde antes de acabar o tempo.
+O desafio conecta cinco setores alternando passagens superiores e inferiores. Reúne dois obstáculos deslizantes em eixos distintos, barra giratória, pêndulo, três armadilhas cíclicas, dois pisos lentos e três perseguidores. Não há bifurcação segura nem placas explicativas; os estados dos perigos são apresentados pelas cores ensinadas no tutorial. A vitória depende de chegar à área verde antes do tempo acabar, sem sofrer impacto.
 
 ## Onde editar
 
 - `Fase 01 — Tutorial` e `Fase 02 — Desafio`: objetos separados na Hierarchy. Cada raiz possui `CourseLevel`, com duração, posição inicial e referências dos elementos.
-- `Player`: `Rigidbody2D`, gravidade zero e rotação travada. `Speed` controla a velocidade e `Protection Seconds` a invulnerabilidade.
+- `Player`: `Rigidbody2D`, gravidade zero e rotação travada. `Speed` controla a velocidade.
 - Blocos e pistão: `PatrolHazard`, com pontos A/B, velocidade e deslocamento inicial. Pontos verticais produzem o pistão do desafio.
 - Barra giratória e pêndulo: `RotatingHazard`, com ângulo inicial, velocidade angular, opção `Oscillates`, amplitude e período. O Rigidbody2D fica na raiz sem escala; a barra filha contém o trigger. A rotação segue o relógio da fase, portanto pausa e reinício mantêm a sincronização.
-- Armadilhas: `CycleTrap`, com tempo apagado, aviso, tempo ativo e deslocamento inicial. O amarelo é aviso e ainda não causa dano. Vermelho causa dano mesmo se o jogador já estiver parado dentro da área. O texto reforça o estado além da cor.
+- Armadilhas: `CycleTrap`, com tempo apagado, aviso, tempo ativo e deslocamento inicial. O amarelo é aviso e ainda não causa dano. Vermelho causa dano mesmo se o jogador já estiver parado dentro da área. No tutorial, o texto reforça o estado além da cor.
 - Pisos: `SlowZone`, com multiplicador de velocidade. Não acumulam penalidades: vale a redução mais forte sob o centro do personagem.
 - Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Um teste de colisão antes do movimento impede atravessar paredes. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
-- Item: `ExtraLife`, com trigger de coleta. O símbolo de cruz diferencia o item dos inimigos rosas.
 - `GameController`: fases, transições, recordes, mensagens e controle do relógio.
-- `Interface`: Canvas, HUD, dicas e telas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v2, desafio v3), preservando o desbloqueio do desafio.
+- `Interface`: Canvas, HUD, dicas e telas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v3, desafio v4), preservando o desbloqueio do desafio.
 
 Paredes usam a camada `CourseWalls` (8). Ao adicionar uma parede, use essa camada para os inimigos enxergarem e respeitarem a colisão. Paredes precisam de `BoxCollider2D` sem trigger.
 
@@ -35,7 +32,7 @@ A cena está salva e pode ser editada no Inspector. **Percurso > Reconstruir as 
 
 ## Organização do código
 
-`RunSession` contém as regras sem depender da cena. `GameController` seleciona a fase e coordena a partida; `CourseLevel` reúne os objetos de cada fase. Os componentes individuais cuidam de movimento, inimigos, obstáculos e item. `CourseHud` apresenta os estados e `CameraFit` mantém a arena visível. `Editor/CourseBuilder` constrói a cena e gera a versão WebGL.
+`RunSession` contém as regras sem depender da cena. `GameController` seleciona a fase e coordena a partida; `CourseLevel` reúne os objetos de cada fase. Os componentes individuais cuidam de movimento, inimigos e obstáculos. `CourseHud` apresenta os estados e `CameraFit` mantém a arena visível. `Editor/CourseBuilder` constrói a cena e gera a versão WebGL.
 
 ## Testes e build
 
@@ -50,13 +47,13 @@ bash scripts/package-web.sh
 
 Relatórios ficam em `TestResults/`. A saída WebGL fica em `Builds/WebGL/` e o pacote em `Builds/percurso-webgl.zip`. Teste em navegador com `python3 -m http.server 8765 --bind 127.0.0.1 --directory Builds/WebGL`.
 
-Os testes exercitam regras de dano e coleta, expiração da proteção, colisões, transição/reinício de fase, estados da armadilha, piso lento, perseguição, limites, pausa, impacto da barra giratória e reversão do pêndulo. A avaliação de dificuldade continua dependendo de partidas reais.
+Os testes exercitam derrota no primeiro impacto, colisões, transição/reinício de fase, estados da armadilha, piso lento, perseguição, limites, pausa, impacto da barra giratória e reversão do pêndulo, bloqueio do vão pelo guarda, percurso de atração e contorno, e conectividade dos cinco setores do desafio. A avaliação de dificuldade continua dependendo de partidas reais.
 
 No itch.io, use o tipo HTML e marque o ZIP para ser jogado no navegador. O ZIP precisa ter `index.html` na raiz. A publicação depende do acesso à conta do autor.
 
-## Limitação visual observada
+## Verificação visual
 
-Na prévia WebGL do navegador integrado, a primeira parede do tutorial não aparece, embora sua colisão continue funcionando. O mesmo defeito aparece na captura da versão anterior a esta revisão. O problema persistiu após reconstrução sem cache e tentativas de trocar a representação visual; essas tentativas foram descartadas. A passagem inferior foi validada com física real nos testes, mas a causa da ausência visual permanece pendente.
+A primeira divisória do tutorial foi reposicionada de x=-6 para x=-6,1, mantendo o topo e a passagem inferior do bloco. Na versão WebGL verificada, a parede voltou a aparecer com o SpriteRenderer e material padrão do projeto; sua colisão acompanha a mesma posição. As duas fases devem continuar sendo verificadas visualmente no navegador após mudanças na cena.
 
 ## Créditos
 

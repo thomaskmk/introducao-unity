@@ -9,14 +9,11 @@ namespace ObstacleCourse
         public GameController game;
         public SpriteRenderer visual;
         [Min(0.1f)] public float speed = 5f;
-        [Min(0.1f)] public float protectionSeconds = 1.5f;
         public Vector2 spawn = new Vector2(-13, -4.5f);
         private Rigidbody2D body;
         private Vector2 movement;
-        private float protectedUntil;
         private Color normalColor;
         public Vector2 Position => body != null ? body.position : (Vector2)transform.position;
-        public bool IsProtected => game.IsPlaying && Time.time < protectedUntil;
         public float SpeedMultiplier
         {
             get
@@ -57,8 +54,6 @@ namespace ObstacleCourse
                 // Impede que andar na diagonal seja mais rápido.
                 movement = Vector2.ClampMagnitude(movement, 1);
             }
-            bool blinking = game.IsPlaying && Time.time < protectedUntil;
-            visual.color = blinking && Mathf.FloorToInt(Time.time * 10) % 2 == 0 ? Color.white : normalColor;
         }
 
         private void FixedUpdate()
@@ -73,14 +68,12 @@ namespace ObstacleCourse
             body.position = spawn;
             body.linearVelocity = Vector2.zero;
             movement = Vector2.zero;
-            protectedUntil = 0;
             if (visual != null) visual.color = normalColor;
         }
 
         public void TouchHazard()
         {
-            if (!game.IsPlaying || Time.time < protectedUntil) return;
-            protectedUntil = Time.time + protectionSeconds;
+            if (!game.IsPlaying) return;
             game.TakeDamage();
         }
     }

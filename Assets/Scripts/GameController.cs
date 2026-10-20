@@ -15,11 +15,9 @@ namespace ObstacleCourse
         public bool HasNextLevel => LevelIndex + 1 < levels.Length;
         public bool ChallengeUnlocked => PlayerPrefs.GetInt("ObstacleCourse.ChallengeUnlocked.v2", 0) == 1;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
-        public string Hint => IsPlaying && Time.time < noticeUntil ? notice : Level.Hint(player.Position);
+        public string Hint => Level.Hint(player.Position);
         private string BestTimeKey => "ObstacleCourse.BestTime.v" + Level.layoutVersion + "." + LevelIndex;
         private RunState displayedState = (RunState)(-1);
-        private string notice;
-        private float noticeUntil;
 
         private void Awake()
         {
@@ -41,10 +39,9 @@ namespace ObstacleCourse
         private void SelectLevel(int index)
         {
             LevelIndex = index;
-            Session = new RunSession(Level.timeLimit, 1, 2);
+            Session = new RunSession(Level.timeLimit);
             for (int i = 0; i < levels.Length; i++) levels[i].gameObject.SetActive(i == index);
             player.spawn = Level.spawn;
-            noticeUntil = 0;
         }
         public void PrimaryAction()
         {
@@ -65,7 +62,6 @@ namespace ObstacleCourse
         public void StartRun()
         {
             Session.Begin();
-            noticeUntil = 0;
             player.ResetPlayer();
             Level.ResetLevel();
             Physics2D.SyncTransforms();
@@ -90,19 +86,9 @@ namespace ObstacleCourse
             if (Session.TakeDamage())
             {
                 Debug.Log("PARTIDA: dano — vidas: " + Session.Lives);
-                Notify("IMPACTO ABSORVIDO! Você pode avançar durante a breve invulnerabilidade.");
             }
             if (Session.State != displayedState) PresentState();
         }
-        public bool CollectLife()
-        {
-            if (!Session.CollectLife()) return false;
-            Notify("+1 VIDA! Você pode absorver um impacto. O personagem pisca durante a proteção.");
-            Debug.Log("PARTIDA: vida extra coletada — vidas: " + Session.Lives);
-            hud.Refresh(this);
-            return true;
-        }
-        private void Notify(string text) { notice = text; noticeUntil = Time.time + 4; }
         public void ReachFinish()
         {
             if (!IsPlaying) return;

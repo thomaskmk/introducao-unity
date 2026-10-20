@@ -9,26 +9,23 @@ namespace ObstacleCourse
     {
         public RunState State { get; private set; } = RunState.Menu;
         public float Duration { get; }
-        public int InitialLives { get; }
-        public int MaximumLives { get; }
         public float Remaining { get; private set; }
         public float Elapsed => Duration - Remaining;
         public int Lives { get; private set; }
         public string EndReason { get; private set; } = "";
         public int Score => State == RunState.Won ? 1000 + (int)Math.Ceiling(Remaining * 10) + Lives * 100 : 0;
 
-        public RunSession(float duration, int lives, int maximumLives = 2)
+        public RunSession(float duration)
         {
-            if (duration <= 0 || lives <= 0 || maximumLives < lives) throw new ArgumentOutOfRangeException();
+            if (duration <= 0) throw new ArgumentOutOfRangeException();
             Duration = Remaining = duration;
-            InitialLives = Lives = lives;
-            MaximumLives = maximumLives;
+            Lives = 1;
         }
 
         public void Begin()
         {
             Remaining = Duration;
-            Lives = InitialLives;
+            Lives = 1;
             EndReason = "";
             State = RunState.Playing;
         }
@@ -44,14 +41,7 @@ namespace ObstacleCourse
         {
             if (State != RunState.Playing) return false;
             Lives = Math.Max(0, Lives - 1);
-            if (Lives == 0) Lose("Você perdeu todas as vidas.");
-            return true;
-        }
-
-        public bool CollectLife()
-        {
-            if (State != RunState.Playing || Lives >= MaximumLives) return false;
-            Lives++;
+            if (Lives == 0) Lose("Você atingiu um perigo.");
             return true;
         }
 

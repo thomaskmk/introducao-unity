@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class NewMechanicsTests
     {
         private GameController game;
-        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v3.1" };
+        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v3.0", "ObstacleCourse.BestTime.v4.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] values = new float[3];
         [UnitySetUp] public IEnumerator Load()
@@ -39,29 +39,6 @@ namespace ObstacleCourse.Tests
             game.player.GetComponent<Rigidbody2D>().position=position;
             Physics2D.SyncTransforms();
         }
-        [UnityTest] public IEnumerator PickupIsOptionalSingleUseAndReturnsOnRetry()
-        {
-            var pickup=game.Level.pickups[0];
-            Place(pickup.transform.position);
-            yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
-            Assert.AreEqual(2,game.Session.Lives); Assert.IsTrue(pickup.Collected);
-            game.player.TouchHazard(); Assert.AreEqual(1,game.Session.Lives);
-            yield return new WaitForFixedUpdate(); Assert.AreEqual(1,game.Session.Lives);
-            game.StartRun(); yield return null;
-            Assert.IsFalse(pickup.Collected); Assert.IsTrue(pickup.GetComponent<Collider2D>().enabled);
-            Assert.AreEqual(1,game.Session.Lives);
-            game.ReachFinish(); Assert.AreEqual(RunState.Won,game.Session.State);
-        }
-        [UnityTest] public IEnumerator DamageProtectionAllowsMovementThenExpires()
-        {
-            game.Session.CollectLife();
-            game.player.TouchHazard(); game.player.TouchHazard();
-            Assert.AreEqual(1,game.Session.Lives); Assert.IsTrue(game.player.IsProtected);
-            Assert.AreEqual(RunState.Playing,game.Session.State);
-            yield return new WaitForSeconds(game.player.protectionSeconds+.05f);
-            Assert.IsFalse(game.player.IsProtected);
-            game.player.TouchHazard(); Assert.AreEqual(RunState.Lost,game.Session.State);
-        }
         [UnityTest] public IEnumerator TrapWarnsBeforeDamageAndHurtsPlayerAlreadyInside()
         {
             var trap=game.Level.traps[0];
@@ -89,11 +66,11 @@ namespace ObstacleCourse.Tests
         [UnityTest] public IEnumerator EnemyDetectsPlayerAndStopsPursuingOutsideTerritory()
         {
             var enemy=game.Level.enemies[0];
-            Place(enemy.pointA+new Vector2(-2,0));
+            Place(enemy.pointA+new Vector2(0,-2));
             Vector2 before=enemy.GetComponent<Rigidbody2D>().position;
             for(int i=0;i<10;i++) yield return new WaitForFixedUpdate();
             Assert.IsTrue(enemy.IsChasing);
-            Assert.Less(enemy.GetComponent<Rigidbody2D>().position.x,before.x);
+            Assert.Less(enemy.GetComponent<Rigidbody2D>().position.y,before.y);
             Place(game.player.spawn);
             yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
             Assert.IsFalse(enemy.IsChasing);
@@ -122,14 +99,13 @@ namespace ObstacleCourse.Tests
         [UnityTest] public IEnumerator ProgressionAndRetryKeepCorrectLevelAndResetLife()
         {
             Assert.IsFalse(game.ChallengeUnlocked);
-            game.Session.CollectLife(); game.ReachFinish(); game.PrimaryAction(); yield return null;
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
             Assert.AreEqual(1,game.LevelIndex); Assert.IsTrue(game.ChallengeUnlocked);
-            Assert.AreEqual(1,game.Session.Lives); Assert.AreEqual(20,game.Session.Duration);
+            Assert.AreEqual(1,game.Session.Lives); Assert.AreEqual(38,game.Session.Duration);
             Assert.IsFalse(game.levels[0].gameObject.activeSelf); Assert.IsTrue(game.levels[1].gameObject.activeSelf);
             game.TakeDamage(); Assert.AreEqual(RunState.Lost,game.Session.State);
             game.PrimaryAction(); yield return null;
             Assert.AreEqual(1,game.LevelIndex); Assert.AreEqual(1,game.Session.Lives);
-            Assert.IsFalse(game.Level.pickups[0].Collected);
             game.ReachFinish(); Assert.IsFalse(game.HasNextLevel);
             Assert.AreEqual("DESAFIO\nSUPERADO!",game.hud.title.text);
             game.ReturnToMenu(); Assert.IsTrue(game.hud.challenge.gameObject.activeSelf);
@@ -180,25 +156,76 @@ namespace ObstacleCourse.Tests
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(rotor.initialAngle,rb.rotation)),.01f);
             Assert.Less(Mathf.Abs(Mathf.DeltaAngle(pendulum.initialAngle,pb.rotation)),.01f);
         }
-        [UnityTest] public IEnumerator ChallengeLifeRequiresEnteringTrapAlcove()
+        [UnityTest] public IEnumerator TutorialGuardBlocksEveryLineThroughTheNarrowExit()
+        {
+            var enemy=game.Level.enemies[0];
+            enemy.enabled=false;
+            game.player.enabled=false;
+            var body=game.player.GetComponent<Rigidbody2D>();
+            // Mesmo com o guarda parado, não há espaço para passar ao lado dele.
+            foreach(float x in new[] {10.65f,10.8f,10.95f})
+            {
+                game.StartRun(); Place(new Vector2(x,1.2f)); body.linearVelocity=Vector2.up*5;
+                float deadline=Time.realtimeSinceStartup+2;
+                while(game.IsPlaying && Time.realtimeSinceStartup<deadline) yield return null;
+                Assert.AreEqual(RunState.Lost,game.Session.State);
+                Assert.Less(body.position.y,2.4f);
+            }
+        }
+        [UnityTest] public IEnumerator TutorialCanBeFinishedByLuringGuardAndCirclingAround()
+        {
+            game.player.enabled=false;
+            Place(new Vector2(10.8f,-.9f));
+            yield return new WaitForSeconds(.35f);
+            Assert.IsTrue(game.Level.enemies[0].IsChasing);
+            foreach(var point in new[] {
+                new Vector2(8.5f,-.9f),new Vector2(8.5f,-2.3f),new Vector2(13,-2.3f),
+                new Vector2(13,1.3f),new Vector2(10.8f,1.3f),new Vector2(10.8f,3.6f),new Vector2(13,4.6f) })
+                yield return WalkTo(point);
+            Assert.AreEqual(RunState.Won,game.Session.State);
+        }
+        private IEnumerator WalkTo(Vector2 target)
+        {
+            var body=game.player.GetComponent<Rigidbody2D>();
+            float deadline=Time.realtimeSinceStartup+4;
+            while(game.IsPlaying && Vector2.Distance(body.position,target)>.12f && Time.realtimeSinceStartup<deadline)
+            {
+                body.linearVelocity=(target-body.position).normalized*game.player.speed*game.player.SpeedMultiplier;
+                yield return null;
+            }
+            body.linearVelocity=Vector2.zero;
+            Assert.AreNotEqual(RunState.Lost,game.Session.State,"Impacto no trajeto até "+target);
+            if(game.IsPlaying) Assert.Less(Vector2.Distance(body.position,target),.2f,"Caminho bloqueado até "+target);
+        }
+        [UnityTest] public IEnumerator ChallengeEnemiesDetectPlayerAlongCorridorEdges()
         {
             game.ReachFinish(); game.PrimaryAction(); yield return null;
-            var pickup=game.Level.pickups[0]; var trap=game.Level.traps[0];
-            Assert.Greater(Vector2.Distance(game.Level.spawn,pickup.transform.position),10);
-            // As laterais do nicho são paredes; a abertura superior é a armadilha.
+            var edges=new[] { new Vector2(-3.7f,-2.4f),new Vector2(8.3f,1.2f),new Vector2(9.7f,1.8f) };
+            for(int i=0;i<edges.Length;i++)
+            {
+                game.StartRun(); Place(edges[i]);
+                yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
+                Assert.IsTrue(game.Level.enemies[i].IsChasing,"Inimigo ignora jogador junto à parede do setor "+i);
+            }
+        }
+        [UnityTest] public IEnumerator ChallengeUsesThreeEnemiesAndConnectedMandatorySectors()
+        {
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
+            Assert.AreEqual(3,game.Level.enemies.Length);
+            // Verifica a conectividade sem depender da fase dos perigos móveis.
+            foreach(var hazard in game.Level.GetComponentsInChildren<Collider2D>())
+                if(hazard.isTrigger && !hazard.TryGetComponent<FinishZone>(out _)) hazard.enabled=false;
+            foreach(var enemy in game.Level.enemies) enemy.enabled=false;
+            game.player.enabled=false;
             int walls=1<<8;
-            Assert.IsTrue(Physics2D.Linecast((Vector2)pickup.transform.position+Vector2.left*3,pickup.transform.position,walls));
-            Assert.IsTrue(Physics2D.Linecast((Vector2)pickup.transform.position+Vector2.right*3,pickup.transform.position,walls));
-            game.Session.Tick(trap.safeSeconds+trap.warningSeconds+.1f);
-            Place(trap.transform.position);
-            yield return new WaitForFixedUpdate(); yield return null;
-            Assert.AreEqual(RunState.Lost,game.Session.State);
-            Assert.IsFalse(pickup.Collected,"O dano deve acontecer antes da coleta.");
-            game.StartRun();
-            Place(trap.transform.position); yield return new WaitForFixedUpdate();
-            Assert.IsTrue(game.IsPlaying);
-            Place(pickup.transform.position); yield return new WaitForFixedUpdate(); yield return new WaitForFixedUpdate();
-            Assert.IsTrue(pickup.Collected); Assert.AreEqual(2,game.Session.Lives);
+            foreach(float x in new[] {-9f,-3f,3f,9f})
+                Assert.IsTrue(Physics2D.Linecast(new Vector2(x-1,0),new Vector2(x+1,0),walls),"Atalho indesejado no meio da divisória.");
+            foreach(var point in new[] {
+                new Vector2(-13,5.45f),new Vector2(-6,5.45f),new Vector2(-6,-4.8f),
+                new Vector2(0,-4.8f),new Vector2(0,4.8f),new Vector2(6,4.8f),
+                new Vector2(6,-4.8f),new Vector2(12,-4.8f),new Vector2(12,4.6f) })
+                yield return WalkTo(point);
+            Assert.AreEqual(RunState.Won,game.Session.State);
         }
     }
 }

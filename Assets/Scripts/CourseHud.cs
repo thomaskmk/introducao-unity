@@ -50,7 +50,7 @@ namespace ObstacleCourse
             {
                 subtitle.text = "DUAS FASES  /  UMA VIDA POR TENTATIVA";
                 title.text = "CONTRA O\nRELÓGIO";
-                description.text = "Aprenda no tutorial e enfrente o desafio. Alcance a área verde.\nA cruz rosa dá uma vida extra opcional. Use-a para arriscar.";
+                description.text = "Aprenda no tutorial e enfrente o desafio. Alcance a área verde.\nEvite os perigos: um impacto encerra a tentativa.";
                 primaryLabel.text = "INICIAR TUTORIAL";
             }
             else if (run.State == RunState.Paused)
@@ -63,9 +63,9 @@ namespace ObstacleCourse
             else
             {
                 bool won = run.State == RunState.Won;
-                subtitle.text = won ? "CHEGADA ALCANÇADA" : "TENTE UMA NOVA ROTA";
+                subtitle.text = won ? "CHEGADA ALCANÇADA" : "OBSERVE O MOMENTO DE PASSAR";
                 title.text = won ? (game.HasNextLevel ? "TUTORIAL\nCONCLUÍDO" : "DESAFIO\nSUPERADO!") : "FIM DE\nPARTIDA";
-                description.text = won ? (game.HasNextLevel ? "Você aprendeu os perigos. Agora combine o que aprendeu.\nA próxima fase começa com uma vida e seu próprio relógio." : "Você concluiu as duas fases!\nTente uma rota mais rápida para melhorar seu tempo.") : run.EndReason + "\nTente novamente esta fase. A vida extra reaparece.";
+                description.text = won ? (game.HasNextLevel ? "Você aprendeu os perigos. Agora combine o que aprendeu.\nA próxima fase começa com uma vida e seu próprio relógio." : "Você concluiu as duas fases!\nMelhore sua execução para baixar o tempo.") : run.EndReason + "\nPressione R ou repita esta fase.";
                 result.text = $"TEMPO  {run.Elapsed:F1}s     VIDAS  {run.Lives}     PONTOS  {run.Score}";
                 primaryLabel.text = won && game.HasNextLevel ? "PRÓXIMA FASE" : "REPETIR FASE";
             }

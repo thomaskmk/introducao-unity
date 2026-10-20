@@ -14,7 +14,6 @@ namespace ObstacleCourse
         public ChaserEnemy[] enemies;
         public CycleTrap[] traps;
         public SlowZone[] slowZones;
-        public ExtraLife[] pickups;
 
         public void ResetLevel()
         {
@@ -22,30 +21,22 @@ namespace ObstacleCourse
             foreach (var rotor in rotors) rotor.ResetHazard();
             foreach (var enemy in enemies) enemy.ResetEnemy();
             foreach (var trap in traps) trap.Refresh();
-            foreach (var pickup in pickups) pickup.ResetPickup();
         }
 
         public string Hint(Vector2 position)
         {
-            if (!tutorial)
-            {
-                if (position.x > 8) return "Última passagem: espere o bloco vertical abrir espaço e avance até a chegada.";
-                if (position.y > 2.7f) return "Rota superior: menos risco, mais tempo no piso lento. Desça ao final do corredor.";
-                if (position.x > -2 && position.x < 2)
-                    return "Vida extra no desvio abaixo: atravesse a armadilha apagada. A coleta é opcional.";
-                return "Atalho central: a barra gira, o pêndulo vai e volta. Observe a abertura e evite o perseguidor.";
-            }
+            if (!tutorial) return "Alcance a chegada antes do tempo acabar. Um impacto encerra a tentativa.";
+            if (position.x < -6.5f && position.y < 2.5f)
+                return "WASD / setas para mover. A barra dá voltas completas: observe o espaço que ela varre.";
             if (position.x < -3.5f && position.y > 2.5f)
                 return "Bloco móvel: por cima é mais seguro; por baixo é mais rápido. Espere a abertura.";
-            if (position.x < -6.5f)
-                return position.y < 1.5f
-                    ? "WASD / setas: mova-se. A cruz rosa dá +1 vida. A coleta é opcional."
-                    : "Contorne a parede pelo alto. No bloco móvel, escolha passar por cima ou por baixo.";
             if (position.x < 3.5f)
-                return position.y > -1
-                    ? "Armadilha: APAGADA → AVISO amarelo → ATIVA vermelha. Espere para atravessar."
-                    : "Piso azul reduz sua velocidade. Contorne ou atravesse; depois passe por baixo.";
-            return "O inimigo rosa persegue quando você se aproxima. Atraia-o e desvie até a chegada.";
+            {
+                if (position.y > 1.4f) return "O pêndulo vai e volta. Espere a barra se afastar para passar.";
+                if (position.y > -1) return "Armadilha: APAGADA → AVISO amarelo → ATIVA vermelha. Atravesse apagada.";
+                return "O piso azul reduz a velocidade. Depois, contorne a parede por baixo.";
+            }
+            return "Aproxime-se do vão para atrair o guarda. Recue, contorne-o e atravesse a passagem que ele deixou.";
         }
     }
 }

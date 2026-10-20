@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class CourseIntegrationTests
     {
         private GameController game;
-        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v3.1" };
+        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v3.0", "ObstacleCourse.BestTime.v4.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] saved = new float[3];
         [UnitySetUp] public IEnumerator LoadCourse()
@@ -61,13 +61,17 @@ namespace ObstacleCourse.Tests
             Assert.LessOrEqual(body.position.x,-6.7f,"Player crossed the wall.");
             Assert.Greater(body.position.x,-7.1f,"Player never reached the wall.");
         }
-        [UnityTest] public IEnumerator HazardCollisionRemovesOneLifeWithProtection()
+        [UnityTest] public IEnumerator HazardCollisionImmediatelyEndsAttempt()
         {
-            game.StartRun(); game.Session.CollectLife(); game.player.enabled=false;
+            game.StartRun(); game.player.enabled=false;
             game.player.GetComponent<Rigidbody2D>().position=game.Level.blocks[0].GetComponent<Rigidbody2D>().position;
-            for(int i=0;i<5;i++) yield return new WaitForFixedUpdate();
+            float deadline=Time.realtimeSinceStartup+2;
+            while(game.IsPlaying && Time.realtimeSinceStartup<deadline) yield return null;
+            Assert.AreEqual(RunState.Lost,game.Session.State);
+            Assert.AreEqual(0,game.Session.Lives);
+            Assert.IsTrue(game.hud.overlay.activeSelf);
+            game.StartRun(); yield return null;
             Assert.AreEqual(1,game.Session.Lives);
-            game.player.TouchHazard(); Assert.AreEqual(1,game.Session.Lives);
         }
         [UnityTest] public IEnumerator TutorialLowerPassageWorksOnlyWhenBlockLeavesAnOpening()
         {
