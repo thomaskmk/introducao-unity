@@ -72,6 +72,13 @@ public static class CourseBuilder
         manager.levels[1].gameObject.SetActive(false);
         PrisonArtBuilder.Apply(manager);
         BuildHud(manager);
+        var audio=manager.gameObject.AddComponent<CourseAudio>();
+        audio.game=manager;
+        audio.musicLoop=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/MusicLoop.ogg");
+        audio.uiClick=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/UiClick.ogg");
+        audio.capture=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Capture.ogg");
+        audio.victory=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Victory.ogg");
+        audio.warning=AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Audio/Warning.ogg");
         EditorSceneManager.SaveScene(scene,ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
         PlayerSettings.companyName="thomaskmk";
@@ -164,7 +171,7 @@ public static class CourseBuilder
             Wall("Divisória 3",arena,new Vector2(3,-1.2f),new Vector2(.6f,9.6f));
             Wall("Divisória 4",arena,new Vector2(9,1.2f),new Vector2(.6f,9.6f));
             level.blocks=new[] {
-                Hazard("Bloco superior",arena,game,new Vector2(-12,4.7f),new Vector2(-6.8f,4.7f),new Vector2(1,1),2.6f,0),
+                Hazard("Bloco superior",arena,game,new Vector2(-12,4.5f),new Vector2(-6.8f,4.5f),new Vector2(1,1),2.6f,0),
                 Hazard("Pistão vertical",arena,game,new Vector2(9,-5.1f),new Vector2(9,-2.2f),new Vector2(.8f,1.6f),2.5f,0)
             };
             level.rotors=new[] {
@@ -308,6 +315,9 @@ public static class CourseBuilder
         Panel("Cabeçalho",root,new Vector2(800,835),new Vector2(1520,90),Hex("1D3043"));
         Label("Nome",root,"CONTRA O RELÓGIO",new Vector2(250,850),new Vector2(380,30),25,Color.white,TextAnchor.MiddleLeft,true);
         hud.status=Label("Estado",root,"PERCURSO 01",new Vector2(250,817),new Vector2(380,25),15,Mint,TextAnchor.MiddleLeft);
+        Label("Estrelas legenda",root,"ESTRELAS",new Vector2(800,858),new Vector2(150,22),13,Muted,TextAnchor.MiddleCenter);
+        hud.liveStars=Rect("Estrelas da tentativa",root,new Vector2(800,826),new Vector2(138,42)).gameObject.AddComponent<StarRatingGraphic>();
+        hud.liveStars.raycastTarget=false;
         Label("Tempo legenda",root,"TEMPO",new Vector2(1080,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
         hud.timer=Label("Tempo",root,"60s",new Vector2(1080,821),new Vector2(130,40),32,Color.white,TextAnchor.MiddleCenter,true);
         hud.best=Label("Recorde",root,"MELHOR  —",new Vector2(1260,836),new Vector2(200,50),15,Muted,TextAnchor.MiddleCenter);

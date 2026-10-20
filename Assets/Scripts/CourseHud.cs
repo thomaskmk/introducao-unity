@@ -25,6 +25,7 @@ namespace ObstacleCourse
         public Image accent;
         public Text help;
         public StarRatingGraphic stars;
+        public StarRatingGraphic liveStars;
         public Text starCaption;
         public Text starTargets;
         public Text ratingGuide;
@@ -35,6 +36,7 @@ namespace ObstacleCourse
         {
             var run = game.Session;
             gameplayUI.SetActive(run.State != RunState.Menu);
+            liveStars.SetRating(game.CurrentStars);
             timer.text = Mathf.CeilToInt(run.Remaining).ToString("00") + "s";
             timer.color = run.Remaining <= 10 ? dangerColor : Color.white;
             timerFill.fillAmount = run.Remaining / run.Duration;

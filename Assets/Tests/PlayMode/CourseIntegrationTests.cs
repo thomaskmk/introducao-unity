@@ -99,6 +99,43 @@ namespace ObstacleCourse.Tests
             while(game.IsPlaying && Time.realtimeSinceStartup<deadline) yield return null;
             Assert.AreEqual(RunState.Lost,game.Session.State,"Sem abertura, a passagem inferior deve causar impacto.");
         }
+        [UnityTest] public IEnumerator ChallengeFirstSliderAllowsUpperCrossingAndTimedLowerPass()
+        {
+            game.StartChallenge(); yield return null;
+            game.player.enabled=false;
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger) collider.enabled=false;
+            foreach(var enemy in game.Level.enemies) enemy.enabled=false;
+            var block=game.Level.blocks[0]; block.enabled=false;
+            block.GetComponent<Collider2D>().enabled=true;
+            var obstacle=block.GetComponent<Rigidbody2D>();
+            var player=game.player.GetComponent<Rigidbody2D>();
+            obstacle.position=new Vector2(-9,block.pointA.y);
+            player.position=new Vector2(-10.5f,5.38f);
+            player.linearVelocity=Vector2.right*game.player.speed;
+            Physics2D.SyncTransforms();
+            yield return new WaitForSecondsRealtime(.7f);
+            Assert.IsTrue(game.IsPlaying,"The prisoner's full body must fit above the first challenge slider.");
+            Assert.Greater(player.position.x,-8,"The upper route must cross the divider.");
+
+            game.StartRun();
+            obstacle.position=new Vector2(-12,block.pointA.y);
+            player.position=new Vector2(-10.5f,3.98f);
+            player.linearVelocity=Vector2.right*game.player.speed;
+            Physics2D.SyncTransforms();
+            yield return new WaitForSecondsRealtime(.7f);
+            Assert.IsTrue(game.IsPlaying,"The lower shortcut must remain usable when the slider moves away.");
+            Assert.Greater(player.position.x,-8);
+
+            game.StartRun();
+            obstacle.position=new Vector2(-9,block.pointA.y);
+            player.position=new Vector2(-10.5f,3.98f);
+            player.linearVelocity=Vector2.right*game.player.speed;
+            Physics2D.SyncTransforms();
+            yield return new WaitForSecondsRealtime(.7f);
+            Assert.AreEqual(RunState.Lost,game.Session.State,"The lower route must remain dangerous when the opening is occupied.");
+        }
+
         [UnityTest] public IEnumerator FinishTriggerWinsAndFreezesTheClock()
         {
             game.StartRun();
@@ -221,6 +258,97 @@ namespace ObstacleCourse.Tests
             StringAssert.DoesNotContain("PONTOS",game.hud.result.text);
             game.PrimaryAction(); yield return null;
             Assert.AreEqual(1,game.LevelIndex);
+        }
+
+        [UnityTest] public IEnumerator LiveStarsDecreaseAtThresholdsFreezeOnPauseAndResetForEachPhase()
+        {
+            for(int level=0;level<2;level++)
+            {
+                game.ReturnToMenu();
+                if(level==0) game.StartTutorial(); else game.StartChallenge();
+                Assert.AreEqual(3,game.CurrentStars);
+                Assert.AreEqual(3,game.hud.liveStars.Value);
+                Assert.AreEqual(0,game.EarnedStars,"The HUD score is not a victory award yet.");
+                game.Session.Tick(game.Level.threeStarSeconds-game.Session.Elapsed);
+                game.hud.Refresh(game);
+                Assert.AreEqual(3,game.hud.liveStars.Value,"Exact first threshold remains inclusive.");
+                game.Session.Tick(.1f); game.hud.Refresh(game);
+                Assert.AreEqual(2,game.CurrentStars); Assert.AreEqual(2,game.hud.liveStars.Value);
+                game.TogglePause();
+                yield return new WaitForSecondsRealtime(.1f);
+                Assert.AreEqual(2,game.hud.liveStars.Value);
+                game.TogglePause();
+                game.Session.Tick(game.Level.twoStarSeconds-game.Session.Elapsed);
+                game.hud.Refresh(game);
+                Assert.AreEqual(2,game.hud.liveStars.Value,"Exact second threshold remains inclusive.");
+                game.Session.Tick(.1f); game.hud.Refresh(game);
+                Assert.AreEqual(1,game.CurrentStars); Assert.AreEqual(1,game.hud.liveStars.Value);
+                game.TakeDamage();
+                Assert.AreEqual(0,game.CurrentStars); Assert.AreEqual(0,game.hud.liveStars.Value);
+                game.StartRun();
+                Assert.AreEqual(3,game.hud.liveStars.Value);
+                game.Session.Tick(game.Level.threeStarSeconds+.1f); game.ReachFinish();
+                Assert.AreEqual(2,game.EarnedStars);
+                Assert.AreEqual(game.EarnedStars,game.hud.liveStars.Value);
+                Assert.AreEqual(game.EarnedStars,game.hud.stars.Value);
+                game.ReturnToMenu();
+                Assert.AreEqual(0,game.CurrentStars);
+                Assert.IsFalse(game.hud.liveStars.gameObject.activeInHierarchy);
+            }
+        }
+
+        [UnityTest] public IEnumerator AudioFollowsPauseRestartResultsAndSceneReload()
+        {
+            var audio=game.GetComponent<CourseAudio>();
+            Assert.NotNull(audio);
+            foreach(var clip in new[] {audio.musicLoop,audio.uiClick,audio.capture,audio.victory,audio.warning})
+            {
+                Assert.NotNull(clip);
+                Assert.Greater(clip.length,0);
+            }
+            Assert.AreEqual(2,audio.GetComponents<AudioSource>().Length);
+            Assert.IsTrue(audio.MusicSource.loop);
+            Assert.IsFalse(audio.MusicSource.playOnAwake);
+            Assert.IsFalse(audio.MusicSource.isPlaying,"The initial menu must be silent.");
+            game.StartTutorial(); yield return null; yield return null;
+            Assert.IsTrue(audio.MusicSource.isPlaying);
+            Assert.AreSame(audio.musicLoop,audio.MusicSource.clip);
+            game.TogglePause(); yield return null; yield return null;
+            Assert.IsTrue(audio.MusicPaused);
+            Assert.IsFalse(audio.MusicSource.isPlaying);
+            yield return new WaitForSecondsRealtime(.1f);
+            game.TogglePause(); yield return null; yield return null;
+            Assert.IsFalse(audio.MusicPaused);
+            Assert.IsTrue(audio.MusicSource.isPlaying);
+            game.StartRun(); yield return null; yield return null;
+            Assert.IsTrue(audio.MusicSource.isPlaying);
+            Assert.AreEqual(2,audio.GetComponents<AudioSource>().Length,"Restart must not duplicate audio sources.");
+            game.TakeDamage(); yield return null; yield return null;
+            Assert.IsFalse(audio.MusicSource.isPlaying);
+            Assert.IsTrue(audio.EffectsSource.isPlaying,"Capture must have sound feedback.");
+            game.StartRun(); yield return null; yield return null;
+            game.ReachFinish(); yield return null; yield return null;
+            Assert.IsFalse(audio.MusicSource.isPlaying);
+            Assert.IsTrue(audio.EffectsSource.isPlaying,"Escape must have sound feedback.");
+            game.ReturnToMenu(); yield return null; yield return null;
+            Assert.IsFalse(audio.MusicSource.isPlaying);
+            yield return SceneManager.LoadSceneAsync("Percurso",LoadSceneMode.Single); yield return null;
+            Assert.AreEqual(2,Object.FindObjectsByType<AudioSource>(FindObjectsSortMode.None).Length);
+        }
+
+        [UnityTest] public IEnumerator AudioWarnsAtTheFinalTenSeconds()
+        {
+            game.StartChallenge(); yield return null; yield return null;
+            var audio=game.GetComponent<CourseAudio>();
+            audio.EffectsSource.Stop();
+            game.Session.Tick(game.Session.Remaining-11); yield return null; yield return null;
+            audio.EffectsSource.Stop();
+            game.Session.Tick(1.1f); yield return null; yield return null;
+            Assert.IsTrue(audio.EffectsSource.isPlaying,"Crossing ten seconds remaining must play an alert.");
+            game.TogglePause(); yield return null; yield return null;
+            audio.EffectsSource.Stop();
+            yield return new WaitForSecondsRealtime(.1f);
+            Assert.IsFalse(audio.EffectsSource.isPlaying,"The paused timer must not repeat its warning.");
         }
 
         private void AssertTitleFits()

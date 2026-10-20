@@ -4,7 +4,7 @@
 
 Use Unity 6000.3.26f1. Abra `Assets/Scenes/Percurso.unity` e pressione Play. A cena contém as duas fases; somente a fase atual fica ativa. O menu contém nome, subtítulo de fuga, **Jogar** (desafio direto) e **Tutorial** (opcional). Após vencer o tutorial, **Continuar a fuga** inicia o desafio. Não há bloqueio por progresso.
 
-WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerdo ou direcional do controle também move; A confirma os botões e Start pausa. O suporte ao controle deve ser conferido com dispositivo físico antes da entrega final.
+WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerdo ou direcional do controle também move; A confirma os botões e Start pausa. O suporte ao controle físico está implementado, mas não foi testado; o autor decidiu aceitar essa limitação.
 
 ## Regras
 
@@ -92,3 +92,21 @@ O desafio tem grades de 1,1 × 0,35 em x=-2,15 e x=2,15, ambas em y=-0,3. Elas f
 O travamento do guarda na saída diagonal da guarita foi reproduzido por teste antes da correção. A movimentação preserva o deslocamento paralelo à parede e usa a posição física atual para as consultas de colisão. Os testes cobrem a saída diagonal, o retorno pelos dois lados, respeito às paredes e a manobra completa para concluir o tutorial.
 
 Validação final: 14 testes EditMode e 35 PlayMode aprovados. A auditoria compara 81 registros de física e regras; em relação à versão anterior, apenas duas grades foram acrescentadas e a versão do recorde do desafio passou para 7. A reconstrução mantém os 81 registros idênticos. No WebGL, o tutorial foi concluído em 18,59 s após atrair o guarda na diagonal e contorná-lo; a vitória mostrou tempo e três estrelas, sem pontos. Ambos os botões do menu foram conferidos, assim como as grades do desafio. Console sem erros ou avisos.
+
+## Passagem superior e score durante a partida
+
+O primeiro bloco móvel do desafio tinha topo em y=5,2, deixando só 0,8 unidade até o teto (y=6), menos que a altura física de 0,82 do jogador. A trajetória foi baixada de y=4,7 para y=4,5, abrindo uma folga de 1 unidade. A passagem inferior continua dependendo de o bloco sair da abertura. As demais paredes e hitboxes permanecem iguais, e os recordes v6/v7 são preservados.
+
+`GameController.CurrentStars` fornece o score da tentativa: 3, 2 ou 1 em jogo, pausa e vitória, usando os mesmos limites da avaliação final. Menu e derrota retornam zero. `EarnedStars` continua reservando a concessão de estrelas para uma fuga concluída; a interface não grava uma classificação provisória como recorde. O cabeçalho mostra três estrelas desenhadas por `StarRatingGraphic`, atualizadas conforme o tempo cruza os limites de cada fase.
+
+
+## Áudio livre
+
+`CourseAudio`, no mesmo objeto do `GameController`, acompanha a sessão em `LateUpdate`. Usa duas fontes de áudio: música em loop e efeitos. O menu inicial é silencioso; jogar inicia a música, pausar suspende e retomar continua. Reiniciar interrompe o áudio anterior e inicia uma única reprodução; derrota e vitória interrompem a música e tocam efeitos diferentes. Um aviso toca ao entrar nos últimos dez segundos ou quando um piso próximo começa a armar (distância até o collider menor que 2,5 unidades, intervalo mínimo de 0,8 s entre avisos).
+
+Os cinco arquivos são CC0: música de polosik e efeitos Kenney Interface Sounds. Os arquivos e créditos estão em `Assets/Audio`. Volume inicial: música 0,20 e efeitos 0,55. Não há exigência de instalar pacotes adicionais.
+
+
+Validação desta revisão: 14 testes EditMode e 39 PlayMode aprovados. O teste da passagem superior falhou antes da correção e passou depois, incluindo passagem inferior aberta e bloqueada. Os testes de áudio cobrem referências, pausa, retomada, reinício sem duplicação, resultados e aviso de tempo; os testes de estrelas cobrem ambas as fases e os limites exatos. A auditoria mantém 81 registros, com apenas três registros alterados em relação à versão anterior, todos referentes à altura/trajetória do primeiro bloco do desafio. A reconstrução da cena mantém os registros idênticos.
+
+No navegador, a passagem superior foi atravessada com teclado e o cabeçalho exibiu 3, 2 e 1 estrela conforme a tentativa ultrapassou 24 e 31 segundos. Pausa e retorno ao menu foram conferidos. Console sem erros ou avisos. A reprodução e as transições do áudio foram verificadas pelos testes Unity; o volume percebido fica sujeito à configuração de som do dispositivo. O controle físico permanece sem teste, conforme decisão do autor.

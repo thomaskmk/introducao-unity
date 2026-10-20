@@ -11,10 +11,10 @@ Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite os ob
 - Velocidade do personagem: **4,5 unidades/s**, 10% menor que na versão anterior. O tutorial mantém os recordes v6. O desafio usa v7, após o fechamento dos desvios laterais do pêndulo.
 - **Um impacto encerra a tentativa.** Não há contador de vidas. Reiniciar restaura o tempo, os obstáculos e os inimigos da fase atual.
 - O botão **Jogar** abre o desafio diretamente. O botão menor **Tutorial** oferece uma introdução opcional; ao terminá-la, é possível seguir para o desafio. Recordes são separados por fase e versão do percurso.
-- Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle; o controle ainda precisa de teste com dispositivo físico.
+- Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle. O suporte a controle físico não foi testado; essa limitação foi aceita pelo autor.
 - Build WebGL com carregamento e botão de tela cheia.
 
-As duas fases usam pixel art com tema de fuga da prisão: piso de concreto da LimeZu, grades, prisioneiro e guardas animados, braços mecânicos, portões, pistões, piso de segurança e áreas alagadas. A arte acompanha as colisões e o percurso aprovados. Música, efeitos sonoros e refinamento de dificuldade ficam para as próximas etapas. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
+As duas fases usam pixel art com tema de fuga da prisão: piso de concreto da LimeZu, grades, prisioneiro e guardas animados, braços mecânicos, portões, pistões, piso de segurança e áreas alagadas. A arte acompanha as colisões e o percurso aprovados. Há música de fundo e efeitos distintos para ações do menu, captura, vitória e avisos. O refinamento de dificuldade continua sujeito a partidas de teste. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
 
 ## Estrelas por fase
 
@@ -23,7 +23,7 @@ As duas fases usam pixel art com tema de fuga da prisão: piso de concreto da Li
 | Tutorial | até 25 s | acima de 25 s e até 40 s | concluir após 40 s, antes dos 90 s |
 | Desafio | até 24 s | acima de 24 s e até 31 s | concluir após 31 s, antes dos 38 s |
 
-Derrotas não rendem estrelas. Os limites são inclusivos e ficam visíveis durante a partida e na vitória. A classificação do recorde é calculada pelo melhor tempo salvo por fase; uma tentativa mais lenta não apaga a melhor classificação. Os limites são valores iniciais para balanceamento. A avaliação usa somente tempo e estrelas, sem pontuação numérica.
+Derrotas não rendem estrelas. Os limites são inclusivos. O cabeçalho mostra o score da tentativa como três estrelas, depois duas e uma conforme o tempo ultrapassa cada limite. Na pausa, a classificação fica congelada; uma derrota zera as estrelas e reiniciar restaura as três. Os limites também ficam visíveis durante a partida e na vitória. A classificação do recorde é calculada pelo melhor tempo salvo por fase; uma tentativa mais lenta não apaga a melhor classificação. Os limites são valores iniciais para balanceamento. A avaliação usa somente tempo e estrelas, sem pontuação numérica.
 
 Pausa compacta, sem mensagem. Derrota por contato: “Você foi pego durante a fuga. Tente novamente.” Derrota por tempo: “Você não alcançou a saída a tempo.” O tutorial termina com “Primeiro setor superado”; a fase final, com “Você escapou!”.
 
@@ -95,6 +95,24 @@ O código está no [repositório público](https://github.com/thomaskmk/introduc
 - Cena e recursos iniciais, fonte interna e pacotes: **Unity Technologies**, modelo Universal 2D.
 - Piso do cenário: **[LimeZu — Modern Interiors Free v2.2](https://limezu.itch.io/moderninteriors)**. Uso não comercial; licença original em `Assets/Art/Licensed/ModernInteriors/LICENSE.txt`. Os créditos também aparecem no tutorial jogável.
 - Prisioneiro, guardas, máquinas, grades e pisos especiais: imagens geradas com **OpenAI imagegen** usando o pacote como referência visual; preparação e integração no Unity com apoio do Codex.
+- Música: **polosik**, CC0; efeitos: **Kenney Interface Sounds**, CC0. Fontes e licenças em [Assets/Audio/README.md](Assets/Audio/README.md).
 - Regras de exclusão baseadas no [Unity.gitignore do GitHub](https://github.com/github/gitignore/blob/main/Unity.gitignore).
 
 The Escapists foi uma referência de direção visual; nenhum arquivo do jogo foi extraído ou incorporado. Novos recursos de arte e áudio deverão receber créditos quando forem incorporados.
+
+## Conceitos do tutorial aplicados
+
+Este jogo adapta os conceitos do tutorial de introdução a um percurso de fuga, cuja vitória é alcançar a saída a tempo.
+
+| Conceito | Aplicação no projeto |
+| --- | --- |
+| GameObjects, sprites e componentes | Prisioneiro, guardas, grades, portões e pisos |
+| Rigidbody2D e colisões | Movimento do jogador, paredes e obstáculos |
+| Scripts e ciclo de execução | Inicialização, atualização da interface e movimentação física |
+| Movimento e normalização diagonal | Teclado, analógico e direcional com velocidade limitada |
+| Triggers e reação a interações | Captura, piso elétrico, piso lento e chegada |
+| Interface, menu e fim de partida | Jogar, tutorial opcional, pausa, derrota, vitória e reinício |
+| Áudio e AudioSource | Música em loop, efeitos e sincronização com pausa e resultados |
+| Estado compartilhado | GameController e RunSession coordenam cada tentativa |
+
+Não há coleta como objetivo nem exigência de manter os mesmos sprites ou arena do exercício. Os objetos são construídos por `CourseBuilder`, sem assets de prefab nesta versão. Essa é uma diferença de organização em relação à etapa de prefabs do tutorial; os créditos e a origem dos conceitos estão indicados acima.

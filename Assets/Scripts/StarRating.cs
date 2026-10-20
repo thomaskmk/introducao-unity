@@ -1,6 +1,6 @@
 namespace ObstacleCourse
 {
-    // Only completed escapes are rated; defeat is handled by GameController.
+    // Shared by the live score and final rating; only a successful escape awards the stars.
     public static class StarRating
     {
         public static int ForTime(float elapsed, float threeStarSeconds, float twoStarSeconds)

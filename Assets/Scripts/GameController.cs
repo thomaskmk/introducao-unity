@@ -14,6 +14,9 @@ namespace ObstacleCourse
         public bool IsPlaying => Session != null && Session.State == RunState.Playing;
         public bool HasNextLevel => LevelIndex + 1 < levels.Length;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
+        // Live score: the rating still available if this attempt succeeds.
+        public int CurrentStars => Session.State == RunState.Playing || Session.State == RunState.Paused || Session.State == RunState.Won
+            ? Level.StarsForTime(Session.Elapsed) : 0;
         public int EarnedStars => Session.State == RunState.Won ? Level.StarsForTime(Session.Elapsed) : 0;
         public int BestStars => BestTime > 0 ? Level.StarsForTime(BestTime) : 0;
         private string BestTimeKey => "ObstacleCourse.BestTime.v" + Level.layoutVersion + "." + LevelIndex;
