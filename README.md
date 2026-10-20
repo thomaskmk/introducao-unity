@@ -1,4 +1,6 @@
-# Percurso Contra o Relógio
+# O Escapista
+
+*Uma fuga da prisão contra o tempo.*
 
 Protótipo de um jogo 2D visto de cima, desenvolvido para a disciplina de Jogos e Interação do Insper com **Unity 6.3 LTS (6000.3.26f1)** e o modelo Universal 2D.
 

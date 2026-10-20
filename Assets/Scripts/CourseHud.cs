@@ -79,7 +79,7 @@ namespace ObstacleCourse
             if (run.State == RunState.Menu)
             {
                 subtitle.text = "Uma fuga da prisão contra o tempo.";
-                title.text = "CONTRA O\nRELÓGIO";
+                title.text = "O ESCAPISTA";
                 description.text = "";
                 primaryLabel.text = "JOGAR";
             }

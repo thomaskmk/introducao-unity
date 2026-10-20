@@ -82,7 +82,7 @@ public static class CourseBuilder
         EditorSceneManager.SaveScene(scene,ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
         PlayerSettings.companyName="thomaskmk";
-        PlayerSettings.productName="Percurso Contra o Relógio";
+        PlayerSettings.productName="O Escapista";
         PlayerSettings.defaultScreenWidth=1280; PlayerSettings.defaultScreenHeight=720;
         PlayerSettings.defaultWebScreenWidth=1280; PlayerSettings.defaultWebScreenHeight=720;
         PlayerSettings.runInBackground=false;
@@ -313,7 +313,7 @@ public static class CourseBuilder
         var root=Rect("Durante a partida",layout,new Vector2(800,450),new Vector2(1600,900));
         hud.gameplayUI=root.gameObject;
         var header=Panel("Cabeçalho",root,new Vector2(800,835),new Vector2(1520,90),Hex("1D3043"));
-        Label("Nome",root,"CONTRA O RELÓGIO",new Vector2(250,850),new Vector2(380,30),25,Color.white,TextAnchor.MiddleLeft,true);
+        Label("Nome",root,"O ESCAPISTA",new Vector2(250,850),new Vector2(380,30),25,Color.white,TextAnchor.MiddleLeft,true);
         hud.status=Label("Estado",root,"PERCURSO 01",new Vector2(250,817),new Vector2(380,25),15,Mint,TextAnchor.MiddleLeft);
         Label("Estrelas legenda",root,"ESTRELAS",new Vector2(800,858),new Vector2(150,22),13,Muted,TextAnchor.MiddleCenter);
         hud.liveStars=Rect("Estrelas da tentativa",root,new Vector2(800,826),new Vector2(138,42)).gameObject.AddComponent<StarRatingGraphic>();

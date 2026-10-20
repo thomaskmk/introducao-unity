@@ -13824,7 +13824,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "CONTRA O REL\xD3GIO"
+  m_Text: O ESCAPISTA
 --- !u!222 &361220494
 CanvasRenderer:
   m_ObjectHideFlags: 0
