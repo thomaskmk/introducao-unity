@@ -45,7 +45,7 @@ namespace ObstacleCourse
             if (game == null || game.Session == null) return;
             var run = game.Session;
             bool newRun = run.State == RunState.Playing &&
-                (lastSession != run || lastState == RunState.Menu ||
+                (lastSession != run || lastState == RunState.Menu || lastState == RunState.Introduction ||
                  lastState == RunState.Won || lastState == RunState.Lost || run.Elapsed < lastElapsed);
             if (newRun)
             {

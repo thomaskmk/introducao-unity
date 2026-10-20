@@ -253,6 +253,8 @@ namespace ObstacleCourse.Tests
             game.ReturnToMenu();
             game.hud.tutorial.onClick.Invoke(); yield return null;
             Assert.AreEqual(0,game.LevelIndex);
+            Assert.AreEqual(RunState.Introduction,game.Session.State);
+            yield return CompleteIntroduction();
             Assert.IsTrue(game.IsPlaying);
             game.ReachFinish();
             StringAssert.DoesNotContain("PONTOS",game.hud.result.text);
@@ -265,7 +267,7 @@ namespace ObstacleCourse.Tests
             for(int level=0;level<2;level++)
             {
                 game.ReturnToMenu();
-                if(level==0) game.StartTutorial(); else game.StartChallenge();
+                if(level==0) { game.StartTutorial(); yield return CompleteIntroduction(); } else game.StartChallenge();
                 Assert.AreEqual(3,game.CurrentStars);
                 Assert.AreEqual(3,game.hud.liveStars.Value);
                 Assert.AreEqual(0,game.EarnedStars,"The HUD score is not a victory award yet.");
@@ -310,7 +312,7 @@ namespace ObstacleCourse.Tests
             Assert.IsTrue(audio.MusicSource.loop);
             Assert.IsFalse(audio.MusicSource.playOnAwake);
             Assert.IsFalse(audio.MusicSource.isPlaying,"The initial menu must be silent.");
-            game.StartTutorial(); yield return null; yield return null;
+            game.StartTutorial(); yield return CompleteIntroduction(); yield return null; yield return null;
             Assert.IsTrue(audio.MusicSource.isPlaying);
             Assert.AreSame(audio.musicLoop,audio.MusicSource.clip);
             game.TogglePause(); yield return null; yield return null;
@@ -349,6 +351,12 @@ namespace ObstacleCourse.Tests
             audio.EffectsSource.Stop();
             yield return new WaitForSecondsRealtime(.1f);
             Assert.IsFalse(audio.EffectsSource.isPlaying,"The paused timer must not repeat its warning.");
+        }
+
+        private IEnumerator CompleteIntroduction()
+        {
+            yield return null;
+            for(int i=0;i<3;i++) { game.hud.introduction.Advance(); yield return null; }
         }
 
         private void AssertTitleFits()

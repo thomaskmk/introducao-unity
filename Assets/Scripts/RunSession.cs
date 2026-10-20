@@ -2,7 +2,7 @@ using System;
 
 namespace ObstacleCourse
 {
-    public enum RunState { Menu, Playing, Paused, Won, Lost }
+    public enum RunState { Menu, Playing, Paused, Won, Lost, Introduction }
     public enum DefeatCause { None, Contact, Timeout }
 
     // Regras da partida separadas da cena para poder testar tempo, dano e reinício.
@@ -19,6 +19,12 @@ namespace ObstacleCourse
         {
             if (duration <= 0) throw new ArgumentOutOfRangeException();
             Duration = Remaining = duration;
+        }
+
+        public void ShowIntroduction()
+        {
+            Begin();
+            State = RunState.Introduction;
         }
 
         public void Begin()

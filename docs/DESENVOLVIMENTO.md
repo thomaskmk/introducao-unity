@@ -110,3 +110,14 @@ Os cinco arquivos são CC0: música de polosik e efeitos Kenney Interface Sounds
 Validação desta revisão: 14 testes EditMode e 39 PlayMode aprovados. O teste da passagem superior falhou antes da correção e passou depois, incluindo passagem inferior aberta e bloqueada. Os testes de áudio cobrem referências, pausa, retomada, reinício sem duplicação, resultados e aviso de tempo; os testes de estrelas cobrem ambas as fases e os limites exatos. A auditoria mantém 81 registros, com apenas três registros alterados em relação à versão anterior, todos referentes à altura/trajetória do primeiro bloco do desafio. A reconstrução da cena mantém os registros idênticos.
 
 No navegador, a passagem superior foi atravessada com teclado e o cabeçalho exibiu 3, 2 e 1 estrela conforme a tentativa ultrapassou 24 e 31 segundos. Pausa e retorno ao menu foram conferidos. Console sem erros ou avisos. A reprodução e as transições do áudio foram verificadas pelos testes Unity; o volume percebido fica sujeito à configuração de som do dispositivo. O controle físico permanece sem teste, conforme decisão do autor.
+
+
+## Introdução guiada do tutorial
+
+Ao selecionar Tutorial no menu, `RunSession.Introduction` mantém tempo, movimento e obstáculos parados durante três etapas: personagem/movimentação, saída/objetivo e cabeçalho/tempo-estrelas. `TutorialIntroduction` projeta os alvos pela câmera e recalcula os recortes quando a janela muda. `SpotlightGraphic` desenha o escurecimento fora do alvo e intercepta cliques no HUD, inclusive dentro da área transparente. O cartão mantém o estilo das dicas contextuais e aceita clique ou a ação Submit da interface (Enter / A).
+
+A terceira confirmação inicia a partida, com 90 segundos e música; as seis dicas de proximidade continuam iguais. Reinício começa diretamente; voltar ao menu e escolher Tutorial reapresenta as três etapas. O Desafio continua iniciando diretamente. Metas, velocidades, colisões, paredes e regras de vitória/derrota não mudam.
+
+Durante a introdução, a interpolação visual dos corpos é suspensa e o desenho é alinhado à posição física já restaurada. Ao começar, os modos de interpolação originais são restabelecidos. Isso evita mostrar a pose da tentativa anterior ao reabrir o tutorial com o tempo parado; o teste de reentrada reproduziu o deslocamento de 1,5 unidade antes da correção.
+
+Validação final da introdução: 14 testes EditMode e 41 PlayMode aprovados, incluindo os três destaques, relógio/física parados, texto sem corte, foco do botão, avanço único por quadro, início de áudio/dicas, desafio direto e reentrada após pausa. A auditoria preserva os mesmos 81 registros de física e regras do commit anterior. No navegador, avanço por clique e Enter, bloqueio dos controles ao fundo, início normal e reentrada alinhada foram confirmados; a terceira etapa também foi conferida em 1280 × 560. Console sem erros ou avisos.

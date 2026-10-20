@@ -10,6 +10,7 @@ namespace ObstacleCourse
         public Text best;
         public Text status;
         public TutorialGuide guide;
+        public TutorialIntroduction introduction;
         public Button tutorial;
         public GameObject gameplayUI;
         public Image timerFill;
@@ -50,9 +51,12 @@ namespace ObstacleCourse
         public void ShowState(GameController game)
         {
             var run = game.Session;
-            bool show = run.State != RunState.Playing;
+            bool introducing = run.State == RunState.Introduction;
+            introduction.gameObject.SetActive(introducing);
+            bool show = run.State != RunState.Playing && !introducing;
             overlay.SetActive(show);
             Refresh(game);
+            if (introducing) { introduction.Refresh(); introduction.FocusNext(); return; }
             if (!show) { if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); return; }
             secondary.gameObject.SetActive(run.State != RunState.Menu);
             tutorial.gameObject.SetActive(run.State == RunState.Menu);

@@ -312,7 +312,7 @@ public static class CourseBuilder
         layout.anchorMin=layout.anchorMax=new Vector2(.5f,.5f);
         var root=Rect("Durante a partida",layout,new Vector2(800,450),new Vector2(1600,900));
         hud.gameplayUI=root.gameObject;
-        Panel("Cabeçalho",root,new Vector2(800,835),new Vector2(1520,90),Hex("1D3043"));
+        var header=Panel("Cabeçalho",root,new Vector2(800,835),new Vector2(1520,90),Hex("1D3043"));
         Label("Nome",root,"CONTRA O RELÓGIO",new Vector2(250,850),new Vector2(380,30),25,Color.white,TextAnchor.MiddleLeft,true);
         hud.status=Label("Estado",root,"PERCURSO 01",new Vector2(250,817),new Vector2(380,25),15,Mint,TextAnchor.MiddleLeft);
         Label("Estrelas legenda",root,"ESTRELAS",new Vector2(800,858),new Vector2(150,22),13,Muted,TextAnchor.MiddleCenter);
@@ -353,9 +353,36 @@ public static class CourseBuilder
         hud.tutorial=ButtonAt("Tutorial opcional",card,"TUTORIAL",new Vector2(390,101),new Vector2(270,48),Hex("30475B"),Color.white);
         UnityEventTools.AddPersistentListener(hud.tutorial.onClick,game.StartTutorial);
         hud.help=Label("Ajuda",card,"WASD ou setas para mover.  Controle: analógico / direcional.\nEnter / A confirma.  Esc / Start pausa.  R reinicia.",new Vector2(440,49),new Vector2(800,60),17,Muted,TextAnchor.MiddleCenter);
+        BuildTutorialIntroduction(game,hud,canvasGo.transform,header.rectTransform);
         var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));
         events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
         EditorUtility.SetDirty(events);
+    }
+    private static void BuildTutorialIntroduction(GameController game,CourseHud hud,Transform canvas,RectTransform header)
+    {
+        var screen=Rect("Introdução guiada",canvas,Vector2.zero,Vector2.zero);
+        screen.anchorMin=Vector2.zero; screen.anchorMax=Vector2.one; screen.offsetMin=screen.offsetMax=Vector2.zero;
+        var intro=screen.gameObject.AddComponent<TutorialIntroduction>();
+        hud.introduction=intro; intro.game=game; intro.header=header;
+        intro.exit=game.levels[0].GetComponentInChildren<FinishZone>().GetComponent<Collider2D>();
+        intro.spotlight=screen.gameObject.AddComponent<SpotlightGraphic>();
+        intro.spotlight.color=new Color(.025f,.04f,.06f,.86f); intro.spotlight.raycastTarget=true;
+        intro.layout=Rect("Conteúdo da introdução",screen,Vector2.zero,new Vector2(1600,900));
+        intro.layout.anchorMin=intro.layout.anchorMax=new Vector2(.5f,.5f);
+        Color gold=Hex("F1CD78");
+        intro.pointer=Panel("Linha da apresentação",intro.layout,Vector2.zero,new Vector2(1,2),gold).rectTransform;
+        intro.card=Panel("Explicação inicial",intro.layout,Vector2.zero,new Vector2(600,300),Hex("252C38")).rectTransform;
+        intro.card.GetComponent<Image>().raycastTarget=true;
+        Panel("Acento",intro.card,new Vector2(2,150),new Vector2(4,300),gold);
+        intro.title=Label("Título",intro.card,"",new Vector2(280,260),new Vector2(504,38),25,gold,TextAnchor.MiddleLeft,true);
+        intro.progress=Label("Etapa",intro.card,"",new Vector2(555,260),new Vector2(60,30),17,Muted,TextAnchor.MiddleCenter);
+        intro.message=Label("Explicação",intro.card,"",new Vector2(300,156),new Vector2(544,146),21,Color.white,TextAnchor.MiddleLeft);
+        Label("Como avançar",intro.card,"Clique ou pressione Enter / A",new Vector2(197,41),new Vector2(338,32),16,Muted,TextAnchor.MiddleLeft);
+        intro.next=ButtonAt("Próxima etapa",intro.card,"PRÓXIMO",new Vector2(480,42),new Vector2(184,50),gold,Ink);
+        intro.nextLabel=intro.next.GetComponentInChildren<Text>();
+        intro.next.navigation=new Navigation { mode=Navigation.Mode.None };
+        UnityEventTools.AddPersistentListener(intro.next.onClick,intro.Advance);
+        screen.gameObject.SetActive(false);
     }
     private static RectTransform Rect(string name,Transform parent,Vector2 position,Vector2 size)
     {

@@ -15,7 +15,7 @@ namespace ObstacleCourse
         public bool HasNextLevel => LevelIndex + 1 < levels.Length;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
         // Live score: the rating still available if this attempt succeeds.
-        public int CurrentStars => Session.State == RunState.Playing || Session.State == RunState.Paused || Session.State == RunState.Won
+        public int CurrentStars => Session.State == RunState.Introduction || Session.State == RunState.Playing || Session.State == RunState.Paused || Session.State == RunState.Won
             ? Level.StarsForTime(Session.Elapsed) : 0;
         public int EarnedStars => Session.State == RunState.Won ? Level.StarsForTime(Session.Elapsed) : 0;
         public int BestStars => BestTime > 0 ? Level.StarsForTime(BestTime) : 0;
@@ -30,6 +30,7 @@ namespace ObstacleCourse
         private void Start() { PresentState(); }
         private void Update()
         {
+            if (Session.State == RunState.Introduction) { hud.Refresh(this); return; }
             var keys = Keyboard.current;
             var pad = Gamepad.current;
             if ((keys != null && (keys.escapeKey.wasPressedThisFrame || keys.pKey.wasPressedThisFrame))
@@ -48,7 +49,8 @@ namespace ObstacleCourse
         }
         public void PrimaryAction()
         {
-            if (Session.State == RunState.Menu) { StartChallenge(); }
+            if (Session.State == RunState.Introduction) { hud.introduction.Advance(); }
+            else if (Session.State == RunState.Menu) { StartChallenge(); }
             else if (Session.State == RunState.Paused) { Session.Resume(); PresentState(); }
             else if (Session.State == RunState.Won && HasNextLevel)
             {
@@ -67,7 +69,12 @@ namespace ObstacleCourse
         {
             if (Session.State != RunState.Menu) return;
             SelectLevel(0);
-            StartRun();
+            Session.ShowIntroduction();
+            player.ResetPlayer();
+            Level.ResetLevel();
+            Physics2D.SyncTransforms();
+            hud.introduction.Begin();
+            PresentState();
         }
         public void StartRun()
         {
@@ -87,6 +94,7 @@ namespace ObstacleCourse
         }
         public void TogglePause()
         {
+            if (Session.State == RunState.Introduction) return;
             if (Session.State == RunState.Playing) Session.Pause();
             else if (Session.State == RunState.Paused) Session.Resume();
             PresentState();
