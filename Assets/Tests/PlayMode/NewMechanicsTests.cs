@@ -183,6 +183,25 @@ namespace ObstacleCourse.Tests
             Place(zone.transform.position); game.StartRun(); yield return null;
             Assert.AreEqual(1,game.player.SpeedMultiplier);
         }
+        [UnityTest] public IEnumerator ElectricFloorHitsSleepingPlayerWhenCurrentSwitchesOn()
+        {
+            var trap=game.Level.traps[0];
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger && collider.gameObject!=trap.gameObject) collider.enabled=false;
+            game.player.enabled=false;
+            Place(trap.transform.position);
+            var body=game.player.GetComponent<Rigidbody2D>();
+            body.linearVelocity=Vector2.zero;
+            yield return new WaitForSecondsRealtime(.1f);
+            body.Sleep();
+            Assert.IsTrue(body.IsSleeping());
+            Assert.IsTrue(game.IsPlaying);
+            game.Session.Tick(trap.safeSeconds+trap.warningSeconds+.01f-game.Session.Elapsed);
+            yield return new WaitForSecondsRealtime(.1f);
+            Assert.AreEqual(RunState.Lost,game.Session.State,"Standing still must not bypass the active floor.");
+            Assert.AreEqual(DefeatCause.Contact,game.Session.Defeat);
+            Assert.AreEqual(0,game.EarnedStars);
+        }
         [UnityTest] public IEnumerator EnemyDetectsPlayerAndStopsPursuingOutsideTerritory()
         {
             var enemy=game.Level.enemies[0];
@@ -227,7 +246,7 @@ namespace ObstacleCourse.Tests
             game.PrimaryAction(); yield return null;
             Assert.AreEqual(1,game.LevelIndex); Assert.AreEqual(RunState.Playing,game.Session.State);
             game.ReachFinish(); Assert.IsFalse(game.HasNextLevel);
-            Assert.AreEqual("DESAFIO\nSUPERADO!",game.hud.title.text);
+            Assert.AreEqual("VOCÊ\nESCAPOU!",game.hud.title.text);
             game.ReturnToMenu(); Assert.IsTrue(game.hud.challenge.gameObject.activeSelf);
             game.StartChallenge(); Assert.AreEqual(1,game.LevelIndex);
         }

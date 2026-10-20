@@ -8,6 +8,7 @@ namespace ObstacleCourse.Tests
         {
             var run = new RunSession(90); run.Begin(); run.TakeDamage();
             Assert.AreEqual(RunState.Lost, run.State);
+            Assert.AreEqual(DefeatCause.Contact, run.Defeat);
         }
         [Test] public void MenuDoesNotConsumeTimeOrAcceptDamage()
         {
@@ -21,6 +22,7 @@ namespace ObstacleCourse.Tests
             var run = new RunSession(60); run.Begin(); run.Tick(61); run.Win();
             Assert.AreEqual(RunState.Lost, run.State); Assert.AreEqual(0, run.Remaining);
             Assert.AreEqual(60, run.Elapsed); Assert.AreEqual(0, run.Score);
+            Assert.AreEqual(DefeatCause.Timeout, run.Defeat);
         }
         [Test] public void AdditionalHitsAfterDefeatDoNothing()
         {
@@ -47,6 +49,7 @@ namespace ObstacleCourse.Tests
             var run = new RunSession(60); run.Begin(); run.TakeDamage(); run.Tick(60); run.Begin();
             Assert.AreEqual(RunState.Playing, run.State);
             Assert.AreEqual(60, run.Remaining); Assert.AreEqual("", run.EndReason);
+            Assert.AreEqual(DefeatCause.None, run.Defeat);
         }
         [Test] public void ReturningToMenuStopsTheClock()
         {

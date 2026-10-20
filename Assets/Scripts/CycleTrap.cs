@@ -15,6 +15,8 @@ namespace ObstacleCourse
         public TextMesh label;
         public TrapPhase Phase { get; private set; }
         private SpriteRenderer visual;
+        private Collider2D area;
+        private Collider2D playerCollider;
 
         public TrapPhase PhaseAt(float elapsed)
         {
@@ -23,6 +25,16 @@ namespace ObstacleCourse
                 : time < safeSeconds + warningSeconds ? TrapPhase.Warning : TrapPhase.Active;
         }
         private void Update() { Refresh(); }
+        private void FixedUpdate()
+        {
+            if (!game.IsPlaying || PhaseAt(game.Session.Elapsed) != TrapPhase.Active) return;
+            if (area == null) area = GetComponent<Collider2D>();
+            if (playerCollider == null) playerCollider = game.player.GetComponent<Collider2D>();
+            // Sleeping bodies can stop sending trigger-stay events. The electric floor
+            // must still hit a stationary prisoner when the current switches on.
+            if (area.enabled && playerCollider.enabled && area.Distance(playerCollider).isOverlapped)
+                game.player.TouchHazard();
+        }
         public void Refresh()
         {
             if (visual == null) visual = GetComponent<SpriteRenderer>();

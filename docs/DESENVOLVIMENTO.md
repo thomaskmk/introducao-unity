@@ -2,7 +2,7 @@
 
 ## Abrir e jogar
 
-Use Unity 6000.3.26f1. Abra `Assets/Scenes/Percurso.unity` e pressione Play. A cena contém as duas fases; somente a fase atual fica ativa. O menu inicia o tutorial. Após vencê-lo, **Próxima fase** inicia o desafio e o menu passa a oferecer acesso direto a ele.
+Use Unity 6000.3.26f1. Abra `Assets/Scenes/Percurso.unity` e pressione Play. A cena contém as duas fases; somente a fase atual fica ativa. O menu inicia o tutorial. Após vencê-lo, **Continuar a fuga** inicia o desafio e o menu passa a oferecer acesso direto a ele.
 
 WASD ou setas movem, Esc/P pausa e R reinicia a fase atual. O analógico esquerdo ou direcional do controle também move; A confirma os botões e Start pausa. O suporte ao controle deve ser conferido com dispositivo físico antes da entrega final.
 
@@ -16,7 +16,7 @@ O desafio conecta cinco setores alternando passagens superiores e inferiores. Re
 
 ## Onde editar
 
-- `Fase 01 — Tutorial` e `Fase 02 — Desafio`: objetos separados na Hierarchy. Cada raiz possui `CourseLevel`, com duração, posição inicial e referências dos elementos.
+- `Fase 01 — Tutorial` e `Fase 02 — Desafio`: objetos separados na Hierarchy. Cada raiz possui `CourseLevel`, com duração, posição inicial, metas `threeStarSeconds`/`twoStarSeconds` e referências dos elementos.
 - `Player`: `Rigidbody2D`, gravidade zero e rotação travada. Cápsula vertical fixa de 0,46 × 0,82 unidades, centro 0,2 acima da raiz, ajustada ao corpo desenhado. `Speed` controla a velocidade: 4,5 unidades/s (redução de 10% em relação à versão anterior).
 - Blocos e pistão: `PatrolHazard`, com pontos A/B, velocidade e deslocamento inicial. Pontos verticais produzem o pistão do desafio.
 - Barra giratória e pêndulo: `RotatingHazard`, com ângulo inicial, velocidade angular, opção `Oscillates`, amplitude e período. O Rigidbody2D fica na raiz sem escala; a barra filha contém o trigger. A rotação segue o relógio da fase, portanto pausa e reinício mantêm a sincronização.
@@ -24,7 +24,7 @@ O desafio conecta cinco setores alternando passagens superiores e inferiores. Re
 - Pisos: `SlowZone`, com multiplicador de velocidade. Não acumulam penalidades: vale a redução mais forte sob o centro do personagem.
 - Inimigos: `ChaserEnemy`, com pontos de patrulha, velocidade de perseguição, raio de detecção e território. Detectam somente dentro do território, com linha de visão livre. Uma cápsula vertical de 0,50 × 0,84 unidades, centro 0,2 acima da raiz, define o contato. O movimento usa Collider2D.Cast com essa mesma cápsula e uma margem de 0,02 para respeitar as paredes, inclusive a posição deslocada do collider. Não fazem busca de caminho: use áreas abertas; paredes internas complexas podem prendê-los.
 - `GameController`: fases, transições, recordes, mensagens e controle do relógio.
-- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé apenas com controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v6, desafio v6, devido ao ajuste das hitboxes), preservando o desbloqueio do desafio.
+- `Interface`: Canvas, HUD, dicas e telas. Cabeçalho com tempo, recorde e pausa; rodapé com metas de estrelas e controles. Menu, resultados e transições não usam o conceito de vidas. Os recordes e a liberação do desafio são locais ao navegador/dispositivo. `CourseLevel.layoutVersion` separa recordes após mudanças de percurso (tutorial v6, desafio v6, devido ao ajuste das hitboxes), preservando o desbloqueio do desafio.
 
 Paredes usam a camada `CourseWalls` (8). Ao adicionar uma parede, use essa camada para os inimigos enxergarem e respeitarem a colisão. Paredes precisam de `BoxCollider2D` sem trigger.
 
@@ -32,7 +32,7 @@ A cena está salva e pode ser editada no Inspector. **Percurso > Reconstruir as 
 
 ## Organização do código
 
-`RunSession` contém as regras sem depender da cena. `GameController` seleciona a fase e coordena a partida; `CourseLevel` reúne os objetos de cada fase. Os componentes individuais cuidam de movimento, inimigos e obstáculos. `CourseHud` apresenta os estados e `CameraFit` mantém a arena visível. `TutorialGuide` mostra dicas por proximidade, com áreas, alvos, textos e posições definidos em `CourseBuilder.BuildTutorialGuide`; funciona sem triggers físicos. `Editor/CourseBuilder` constrói a cena e gera a versão WebGL. `Editor/PrisonArtBuilder` aplica a arte às duas fases sem alterar os objetos físicos; `PrisonCharacterVisual` anima os personagens e `PrisonTrapVisual` acompanha os estados das armadilhas.
+`RunSession` contém as regras sem depender da cena e distingue `Contact` de `Timeout`. `StarRating` classifica uma fuga concluída; `GameController.EarnedStars` retorna zero fora da vitória. `StarRatingGraphic` desenha as estrelas como geometria da interface, sem depender de uma fonte. `GameController` seleciona a fase e coordena a partida; `CourseLevel` reúne os objetos de cada fase. Os componentes individuais cuidam de movimento, inimigos e obstáculos. `CourseHud` apresenta os estados e `CameraFit` mantém a arena visível. `TutorialGuide` mostra dicas por proximidade, com áreas, alvos, textos e posições definidos em `CourseBuilder.BuildTutorialGuide`; funciona sem triggers físicos. `Editor/CourseBuilder` constrói a cena e gera a versão WebGL. `Editor/PrisonArtBuilder` aplica a arte às duas fases sem alterar os objetos físicos; `PrisonCharacterVisual` anima os personagens e `PrisonTrapVisual` acompanha os estados das armadilhas.
 
 ## Testes e build
 
@@ -65,3 +65,20 @@ Os conceitos de objetos, componentes, física, scripts, triggers e interface seg
 O template WebGL mantém o canvas posicionado dentro da área visível da janela, sem o tamanho mínimo implícito do antigo contêiner Grid. Isso permite reduzir a altura ou a largura da janela sem cortar o rodapé; `CanvasScaler` e `CameraFit` continuam ajustando a interface e a arena.
 
 O tutorial tem seis dicas. A primeira explica que tocar em obstáculos móveis encerra a tentativa; o guarda é descrito pelo comportamento de perseguição, sem instruir a manobra para passar. O segundo bloco deslizante, junto à passagem inferior, não mostra popup. A pontuação continua com o mesmo valor anterior: 1100 pela fuga mais 10 por segundo restante, arredondado para cima.
+
+
+## Estrelas e telas de resultado
+
+Metas iniciais: tutorial 25 s para três estrelas e 40 s para duas; desafio 24 s e 31 s. Qualquer vitória mais lenta recebe uma estrela. Derrota não recebe estrelas. A comparação usa o tempo real da partida; os tempos de resultado e recorde são exibidos com duas casas decimais, arredondadas para cima para não disfarçar um excesso sobre o limite.
+
+`BestStars` é derivado do melhor tempo já salvo, sem uma segunda chave de persistência que possa ficar desatualizada. A versão de recordes permanece 6: não houve alteração no percurso, nas colisões, na velocidade ou nos tempos. Pausar e reiniciar não concedem estrelas. Repetir uma fase com resultado inferior preserva o recorde anterior.
+
+A pausa usa cartão de 640 × 300, apenas título e botões. Derrotas usam 880 × 520, com texto específico para contato ou tempo. Vitória usa 880 × 690 com título, mensagem, três estrelas preenchidas conforme a classificação, tempo, pontos, metas e ações. O menu inicial mantém as dimensões anteriores. Os subtítulos antigos foram removidos da pausa e dos resultados.
+
+Validação da revisão: 14 testes EditMode e 31 PlayMode aprovados, incluindo limites inclusivos, causas de derrota, pausa compacta, três classificações, persistência após recarregar a cena e recordes separados por fase. Auditoria: os 79 registros mantêm física e configurações anteriores, com adição somente das metas de estrelas; reconstrução final idêntica. No navegador, tutorial concluído com teclado em 19,45 s (3 estrelas) e 44,34 s (1 estrela), mantendo o recorde anterior. Tela de vitória conferida em 1280 × 720 e 1280 × 560.
+
+A conferência visual também detectou o corte da segunda linha dos títulos de derrota. A fonte foi ajustada e os testes passaram a verificar a altura necessária do título nas telas de resultado. Os nove testes de integração da interface passaram novamente após o ajuste.
+
+Foi corrigido um caso anterior do piso elétrico: o corpo físico parado podia dormir e deixar de emitir eventos contínuos de trigger. CycleTrap agora verifica a interseção real dos colliders durante a fase ativa, respeitando pausa e colliders desativados. Um teste coloca explicitamente o jogador em repouso físico antes de ligar a corrente e exige derrota por contato, sem estrelas.
+
+A compilação final também foi conferida no navegador: permanecer imóvel no piso elétrico encerrou a tentativa por contato em 3,42 s; aguardar no início do desafio encerrou por tempo em 38 s. Ambas as telas exibiram o título completo, a mensagem correspondente, zero pontos e nenhuma estrela. Console sem erros ou avisos.

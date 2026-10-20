@@ -40,6 +40,12 @@ namespace ObstacleCourse.Tests
         [UnityTest] public IEnumerator StartsAtMenuAndRestartRestoresPlayerAndRules()
         {
             Assert.AreEqual(RunState.Menu,game.Session.State);
+            foreach(var level in game.levels)
+            {
+                Assert.Greater(level.threeStarSeconds,0);
+                Assert.Greater(level.twoStarSeconds,level.threeStarSeconds);
+                Assert.Greater(level.timeLimit,level.twoStarSeconds);
+            }
             Assert.IsTrue(game.hud.overlay.activeSelf);
             game.StartRun(); yield return null;
             game.player.GetComponent<Rigidbody2D>().position=Vector2.zero;
@@ -116,6 +122,86 @@ namespace ObstacleCourse.Tests
             game.PrimaryAction(); yield return null;
             Assert.AreEqual(RunState.Playing,game.Session.State);
             Assert.AreEqual(1,Time.timeScale);
+        }
+
+        [UnityTest] public IEnumerator CompactPauseAndDefeatsShowTheCorrectStateWithoutAwardingStars()
+        {
+            float fullHeight=game.hud.card.rect.height;
+            game.StartRun(); game.TogglePause(); yield return null;
+            Assert.Less(game.hud.card.rect.height,fullHeight*.6f);
+            Assert.IsFalse(game.hud.description.gameObject.activeSelf);
+            Assert.IsFalse(game.hud.help.gameObject.activeSelf);
+            Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
+            Assert.AreEqual(0,game.EarnedStars);
+            game.PrimaryAction(); game.TakeDamage(); yield return null;
+            Assert.AreEqual(DefeatCause.Contact,game.Session.Defeat);
+            Assert.AreEqual("FUGA\nINTERROMPIDA",game.hud.title.text);
+            AssertTitleFits();
+            Assert.AreEqual("Você foi pego durante a fuga. Tente novamente.",game.hud.description.text);
+            Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
+            Assert.AreEqual(0,game.EarnedStars);
+            game.StartRun(); game.Session.Tick(game.Session.Duration); yield return null;
+            Assert.AreEqual("TEMPO\nESGOTADO",game.hud.title.text);
+            AssertTitleFits();
+            Assert.AreEqual("Você não alcançou a saída a tempo.",game.hud.description.text);
+            Assert.AreEqual(0,game.EarnedStars);
+            Assert.AreEqual(0,game.BestStars);
+            Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
+            Assert.IsFalse(game.hud.subtitle.gameObject.activeSelf);
+        }
+
+        [UnityTest] public IEnumerator StarsFollowTheCurrentEscapeAndBestRatingSurvivesRetriesAndReload()
+        {
+            var times=new[] {24f,30f,50f};
+            var ratings=new[] {3,2,1};
+            for(int i=0;i<times.Length;i++)
+            {
+                game.StartRun();
+                Assert.AreEqual(0,game.EarnedStars);
+                game.Session.Tick(times[i]); game.ReachFinish();
+                Assert.AreEqual(ratings[i],game.EarnedStars);
+                Assert.AreEqual(ratings[i],game.hud.stars.Value);
+                Assert.IsTrue(game.hud.stars.gameObject.activeSelf);
+                AssertTitleFits();
+                Assert.AreEqual(3,game.BestStars,"A slower replay must not erase the best rating.");
+                Assert.AreEqual(24,game.BestTime);
+            }
+            game.ReturnToMenu(); yield return null;
+            Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
+            Assert.AreEqual(0,game.EarnedStars);
+            yield return SceneManager.LoadSceneAsync("Percurso",LoadSceneMode.Single); yield return null;
+            game=Object.FindFirstObjectByType<GameController>();
+            Assert.AreEqual(24,game.BestTime);
+            Assert.AreEqual(3,game.BestStars);
+            Assert.AreEqual(0,game.EarnedStars);
+        }
+
+        [UnityTest] public IEnumerator ChallengeUsesItsOwnStarTargetsAndKeepsRecordsSeparate()
+        {
+            game.StartRun(); game.Session.Tick(20); game.ReachFinish();
+            Assert.AreEqual(3,game.EarnedStars);
+            game.PrimaryAction();
+            Assert.AreEqual(1,game.LevelIndex);
+            game.Session.Tick(24.5f); game.ReachFinish();
+            Assert.AreEqual(2,game.EarnedStars,"24.5s earns three stars only in the tutorial.");
+            Assert.AreEqual(2,game.BestStars);
+            Assert.AreEqual("JOGAR NOVAMENTE",game.hud.primaryLabel.text);
+            Assert.AreEqual("VOCÊ\nESCAPOU!",game.hud.title.text);
+            AssertTitleFits();
+            game.ReturnToMenu();
+            Assert.AreEqual(3,game.BestStars);
+            game.StartChallenge(); yield return null;
+            Assert.AreEqual(2,game.BestStars);
+            Assert.AreEqual(0,game.EarnedStars);
+            Assert.IsFalse(game.hud.stars.gameObject.activeSelf);
+            Assert.IsTrue(game.hud.ratingGuide.gameObject.activeSelf);
+        }
+
+        private void AssertTitleFits()
+        {
+            Canvas.ForceUpdateCanvases();
+            Assert.LessOrEqual(game.hud.title.preferredHeight,game.hud.title.rectTransform.rect.height,
+                "The complete result title must fit without clipping its second line.");
         }
     }
 }

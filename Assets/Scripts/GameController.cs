@@ -15,6 +15,8 @@ namespace ObstacleCourse
         public bool HasNextLevel => LevelIndex + 1 < levels.Length;
         public bool ChallengeUnlocked => PlayerPrefs.GetInt("ObstacleCourse.ChallengeUnlocked.v2", 0) == 1;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
+        public int EarnedStars => Session.State == RunState.Won ? Level.StarsForTime(Session.Elapsed) : 0;
+        public int BestStars => BestTime > 0 ? Level.StarsForTime(BestTime) : 0;
         private string BestTimeKey => "ObstacleCourse.BestTime.v" + Level.layoutVersion + "." + LevelIndex;
         private RunState displayedState = (RunState)(-1);
 
@@ -103,7 +105,7 @@ namespace ObstacleCourse
             Time.timeScale = IsPlaying ? 1 : 0;
             hud.ShowState(this);
             if (Session.State == RunState.Won || Session.State == RunState.Lost)
-                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; pontos: {Session.Score}");
+                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; pontos: {Session.Score}; estrelas: {EarnedStars}");
         }
         private void OnApplicationFocus(bool focused)
         {

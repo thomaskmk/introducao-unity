@@ -3,6 +3,7 @@ using System;
 namespace ObstacleCourse
 {
     public enum RunState { Menu, Playing, Paused, Won, Lost }
+    public enum DefeatCause { None, Contact, Timeout }
 
     // Regras da partida separadas da cena para poder testar tempo, dano e reinício.
     public sealed class RunSession
@@ -12,6 +13,7 @@ namespace ObstacleCourse
         public float Remaining { get; private set; }
         public float Elapsed => Duration - Remaining;
         public string EndReason { get; private set; } = "";
+        public DefeatCause Defeat { get; private set; } = DefeatCause.None;
         public int Score => State == RunState.Won ? 1100 + (int)Math.Ceiling(Remaining * 10) : 0;
 
         public RunSession(float duration)
@@ -24,6 +26,7 @@ namespace ObstacleCourse
         {
             Remaining = Duration;
             EndReason = "";
+            Defeat = DefeatCause.None;
             State = RunState.Playing;
         }
 
@@ -31,13 +34,13 @@ namespace ObstacleCourse
         {
             if (State != RunState.Playing || seconds <= 0) return;
             Remaining = Math.Max(0, Remaining - seconds);
-            if (Remaining <= 0) Lose("O tempo acabou.");
+            if (Remaining <= 0) Lose(DefeatCause.Timeout, "Você não alcançou a saída a tempo.");
         }
 
         public bool TakeDamage()
         {
             if (State != RunState.Playing) return false;
-            Lose("Você atingiu um perigo.");
+            Lose(DefeatCause.Contact, "Você foi pego durante a fuga. Tente novamente.");
             return true;
         }
 
@@ -49,6 +52,6 @@ namespace ObstacleCourse
         public void Pause() { if (State == RunState.Playing) State = RunState.Paused; }
         public void Resume() { if (State == RunState.Paused) State = RunState.Playing; }
         public void ReturnToMenu() { State = RunState.Menu; }
-        private void Lose(string reason) { EndReason = reason; State = RunState.Lost; }
+        private void Lose(DefeatCause cause, string reason) { Defeat = cause; EndReason = reason; State = RunState.Lost; }
     }
 }

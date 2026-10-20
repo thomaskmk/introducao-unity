@@ -110,6 +110,8 @@ public static class CourseBuilder
         level.title = tutorial ? "Tutorial" : "Desafio";
         level.tutorial = tutorial;
         level.timeLimit = tutorial ? 90 : 38;
+        level.threeStarSeconds = tutorial ? 25 : 24;
+        level.twoStarSeconds = tutorial ? 40 : 31;
         level.layoutVersion = 6; // Character hitboxes now follow the illustrated bodies.
         level.spawn = new Vector2(-13,-4.5f);
         var arena = root.transform;
@@ -305,24 +307,30 @@ public static class CourseBuilder
         hud.status=Label("Estado",root,"PERCURSO 01",new Vector2(250,817),new Vector2(380,25),15,Mint,TextAnchor.MiddleLeft);
         Label("Tempo legenda",root,"TEMPO",new Vector2(1080,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
         hud.timer=Label("Tempo",root,"60s",new Vector2(1080,821),new Vector2(130,40),32,Color.white,TextAnchor.MiddleCenter,true);
-        hud.best=Label("Recorde",root,"MELHOR  —",new Vector2(1260,836),new Vector2(200,30),16,Muted,TextAnchor.MiddleCenter);
+        hud.best=Label("Recorde",root,"MELHOR  —",new Vector2(1260,836),new Vector2(200,50),15,Muted,TextAnchor.MiddleCenter);
         var pause=ButtonAt("Pausar",root,"PAUSA  II",new Vector2(1450,835),new Vector2(150,50),Hex("324B61"),Color.white);
         UnityEventTools.AddPersistentListener(pause.onClick,game.TogglePause);
         Panel("Trilho do tempo",root,new Vector2(800,777),new Vector2(1520,4),Hex("2B4054"));
         hud.timerFill=Panel("Barra do tempo",root,new Vector2(800,777),new Vector2(1520,4),Mint);
         hud.timerFill.sprite=square; hud.timerFill.type=Image.Type.Filled; hud.timerFill.fillMethod=Image.FillMethod.Horizontal;
         Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(800,80),new Vector2(1480,30),18,Muted,TextAnchor.MiddleCenter);
+        hud.ratingGuide=Label("Metas de estrelas",root,"",new Vector2(800,120),new Vector2(1480,26),17,Muted,TextAnchor.MiddleCenter);
         BuildTutorialGuide(game, hud, root);
         var shade=Panel("Telas da partida",root,new Vector2(800,450),new Vector2(2000,1400),new Color(.025f,.05f,.08f,.91f));
         shade.raycastTarget=true; hud.overlay=shade.gameObject;
         var panel=Panel("Cartão",shade.transform,new Vector2(1000,700),new Vector2(880,690),Hex("1B2D40"));
+        hud.card=panel.rectTransform;
         // Elementos internos usam coordenadas locais relativas ao canto inferior esquerdo do cartão.
         var card=panel.transform;
-        Panel("Acento",card,new Vector2(440,687),new Vector2(880,6),Mint);
+        hud.accent=Panel("Acento",card,new Vector2(440,687),new Vector2(880,6),Mint);
         hud.subtitle=Label("Subtítulo",card,"",new Vector2(440,630),new Vector2(780,30),17,Mint,TextAnchor.MiddleCenter,true);
         hud.title=Label("Título",card,"",new Vector2(440,495),new Vector2(800,190),70,Color.white,TextAnchor.MiddleCenter,true);
         hud.description=Label("Descrição",card,"",new Vector2(440,342),new Vector2(780,80),22,Muted,TextAnchor.MiddleCenter);
         hud.result=Label("Resultado",card,"",new Vector2(440,271),new Vector2(810,40),19,Mint,TextAnchor.MiddleCenter,true);
+        hud.stars=Rect("Estrelas",card,new Vector2(440,355),new Vector2(240,66)).gameObject.AddComponent<StarRatingGraphic>();
+        hud.stars.raycastTarget=false;
+        hud.starCaption=Label("Classificação",card,"",new Vector2(440,302),new Vector2(780,30),17,Hex("FFCA52"),TextAnchor.MiddleCenter,true);
+        hud.starTargets=Label("Limites das estrelas",card,"",new Vector2(440,235),new Vector2(800,30),17,Muted,TextAnchor.MiddleCenter);
         hud.primary=ButtonAt("Ação principal",card,"COMEÇAR",new Vector2(440,204),new Vector2(410,68),Mint,Ink);
         hud.primaryLabel=hud.primary.GetComponentInChildren<Text>();
         UnityEventTools.AddPersistentListener(hud.primary.onClick,game.PrimaryAction);
@@ -330,7 +338,7 @@ public static class CourseBuilder
         UnityEventTools.AddPersistentListener(hud.secondary.onClick,game.ReturnToMenu);
         hud.challenge=ButtonAt("Desafio desbloqueado",card,"JOGAR DESAFIO",new Vector2(440,121),new Vector2(410,52),Hex("30475B"),Color.white);
         UnityEventTools.AddPersistentListener(hud.challenge.onClick,game.StartChallenge);
-        Label("Ajuda",card,"WASD ou setas para mover.  Controle: analógico / direcional.\nEnter / A confirma.  Esc / Start pausa.  R reinicia.",new Vector2(440,49),new Vector2(800,60),17,Muted,TextAnchor.MiddleCenter);
+        hud.help=Label("Ajuda",card,"WASD ou setas para mover.  Controle: analógico / direcional.\nEnter / A confirma.  Esc / Start pausa.  R reinicia.",new Vector2(440,49),new Vector2(800,60),17,Muted,TextAnchor.MiddleCenter);
         var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));
         events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();
         EditorUtility.SetDirty(events);

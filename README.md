@@ -8,13 +8,24 @@ Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite os ob
 
 - **Tutorial (90 segundos):** apresenta blocos móveis, barra giratória, pêndulo, armadilha cíclica, piso lento e um guarda. Dicas explicativas aparecem por proximidade e apontam para o obstáculo, uma de cada vez. No primeiro bloco, passar por cima dá mais margem; por baixo encurta o caminho e exige esperar a abertura. O guarda ocupa a única saída do último setor: atraia-o e contorne-o.
 - **Desafio (38 segundos):** cinco setores em sequência ocupam toda a arena. O percurso reúne bloco deslizante, pistão vertical, barra giratória, pêndulo, três armadilhas, dois pisos lentos e **três inimigos**. Não há rota segura alternativa nem placas explicativas.
-- Velocidade do personagem: **4,5 unidades/s**, 10% menor que na versão anterior. Os recordes usam a versão 5 para separar tentativas com velocidades diferentes.
+- Velocidade do personagem: **4,5 unidades/s**, 10% menor que na versão anterior. Os recordes usam a versão 6, que já considera as hitboxes ajustadas aos sprites.
 - **Um impacto encerra a tentativa.** Não há contador de vidas. Reiniciar restaura o tempo, os obstáculos e os inimigos da fase atual.
 - Terminar o tutorial libera o desafio, inclusive pelo menu em visitas seguintes no mesmo navegador. Recordes são separados por fase e versão do percurso, preservando o desbloqueio.
 - Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle; o controle ainda precisa de teste com dispositivo físico.
 - Build WebGL com carregamento e botão de tela cheia.
 
 As duas fases usam pixel art com tema de fuga da prisão: piso de concreto da LimeZu, grades, prisioneiro e guardas animados, braços mecânicos, portões, pistões, piso de segurança e áreas alagadas. A arte acompanha as colisões e o percurso aprovados. Música, efeitos sonoros e refinamento de dificuldade ficam para as próximas etapas. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
+
+## Estrelas por fase
+
+| Fase | 3 estrelas | 2 estrelas | 1 estrela |
+| --- | --- | --- | --- |
+| Tutorial | até 25 s | acima de 25 s e até 40 s | concluir após 40 s, antes dos 90 s |
+| Desafio | até 24 s | acima de 24 s e até 31 s | concluir após 31 s, antes dos 38 s |
+
+Derrotas não rendem estrelas. Os limites são inclusivos e ficam visíveis durante a partida e na vitória. A classificação do recorde é calculada pelo melhor tempo salvo por fase; uma tentativa mais lenta não apaga a melhor classificação. Os limites são valores iniciais para balanceamento. A pontuação numérica continua valendo: 1100 pela fuga mais 10 por segundo restante, arredondado para cima.
+
+Pausa compacta, sem mensagem. Derrota por contato: “Você foi pego durante a fuga. Tente novamente.” Derrota por tempo: “Você não alcançou a saída a tempo.” O tutorial termina com “Primeiro setor superado”; a fase final, com “Você escapou!”.
 
 ## Controles
 
@@ -34,7 +45,7 @@ Ao perder o foco, a partida pausa. O recorde fica salvo somente no navegador ou 
 3. Clone o repositório e selecione sua pasta em **Add project from disk** no Hub.
 4. Para o cenário, importe o pacote gratuito conforme as instruções abaixo.
 5. Aguarde a importação e abra `Assets/Scenes/Percurso.unity`.
-6. Pressione Play e, no menu, **Começar**.
+6. Pressione Play e, no menu, **Iniciar tutorial**.
 
 A cena já está pronta e pode ser modificada pela Hierarchy e pelo Inspector. Veja [o guia de desenvolvimento](docs/DESENVOLVIMENTO.md) para localizar cada componente e suas configurações.
 
