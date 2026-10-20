@@ -299,7 +299,7 @@ public static class CourseBuilder
         Panel("Trilho do tempo",root,new Vector2(800,777),new Vector2(1520,4),Hex("2B4054"));
         hud.timerFill=Panel("Barra do tempo",root,new Vector2(800,777),new Vector2(1520,4),Mint);
         hud.timerFill.sprite=square; hud.timerFill.type=Image.Type.Filled; hud.timerFill.fillMethod=Image.FillMethod.Horizontal;
-        Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(800,100),new Vector2(1480,30),18,Muted,TextAnchor.MiddleCenter);
+        Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(800,80),new Vector2(1480,30),18,Muted,TextAnchor.MiddleCenter);
         BuildTutorialGuide(game, hud, root);
         var shade=Panel("Telas da partida",root,new Vector2(800,450),new Vector2(2000,1400),new Color(.025f,.05f,.08f,.91f));
         shade.raycastTarget=true; hud.overlay=shade.gameObject;
