@@ -21,7 +21,7 @@ public static class CourseBuilder
     private static readonly Color Mint = Hex("68E6C1");
     private static readonly Color Orange = Hex("FF855F");
 
-    [MenuItem("Percurso/Criar cena inicial (substitui Percurso)")]
+    [MenuItem("Percurso/Reconstruir as duas fases (substitui Percurso)")]
     public static void Generate()
     {
         Directory.CreateDirectory("Assets/Art/Prototype");
@@ -53,28 +53,6 @@ public static class CourseBuilder
         camera.clearFlags=CameraClearFlags.SolidColor; cameraObject.transform.position=new Vector3(0,0,-10);
 
         var manager=new GameObject("GameController").AddComponent<GameController>();
-        var arena=new GameObject("Arena").transform;
-        Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
-        for(int i=-14;i<=14;i++) Box("Grade vertical",arena,new Vector2(i,0),new Vector2(.018f,12),Hex("203449"),-9);
-        for(int i=-5;i<=5;i++) Box("Grade horizontal",arena,new Vector2(0,i),new Vector2(29.6f,.018f),Hex("203449"),-9);
-        Wall("Limite superior",arena,new Vector2(0,6.15f),new Vector2(30.2f,.3f));
-        Wall("Limite inferior",arena,new Vector2(0,-6.15f),new Vector2(30.2f,.3f));
-        Wall("Limite esquerdo",arena,new Vector2(-15,0),new Vector2(.3f,12.6f));
-        Wall("Limite direito",arena,new Vector2(15,0),new Vector2(.3f,12.6f));
-        Wall("Parede 01 — passe por cima",arena,new Vector2(-6,-1.25f),new Vector2(.8f,9.5f));
-        Wall("Parede 02 — passe por baixo",arena,new Vector2(3,1.25f),new Vector2(.8f,9.5f));
-        Box("Área inicial",arena,new Vector2(-13,-4.5f),new Vector2(2.3f,2.2f),Hex("24465A"),-8);
-        WorldText("INÍCIO",arena,new Vector2(-13,-3.05f),.06f,Muted);
-        WorldText("01",arena,new Vector2(-12,4.8f),.12f,Muted);
-        WorldText("02",arena,new Vector2(-1,4.8f),.12f,Muted);
-        WorldText("03",arena,new Vector2(8,4.8f),.12f,Muted);
-        WorldText("PASSE POR CIMA  >",arena,new Vector2(-6,5.6f),.045f,Mint);
-        WorldText("PASSE POR BAIXO  >",arena,new Vector2(3,-5.6f),.045f,Mint);
-        var goal=Box("Chegada",arena,new Vector2(13,4.6f),new Vector2(2.5f,2.2f),Hex("287860"),-8);
-        var trigger=goal.AddComponent<BoxCollider2D>(); trigger.isTrigger=true;
-        goal.AddComponent<FinishZone>().game=manager;
-        WorldText("CHEGADA",arena,new Vector2(13,4.6f),.055f,Color.white);
-
         var p=Box("Player",null,new Vector2(-13,-4.5f),new Vector2(.7f,.7f),Mint,5);
         var body=p.AddComponent<Rigidbody2D>(); body.gravityScale=0; body.freezeRotation=true;
         body.interpolation=RigidbodyInterpolation2D.Interpolate; body.collisionDetectionMode=CollisionDetectionMode2D.Continuous;
@@ -87,12 +65,11 @@ public static class CourseBuilder
         playerCollider.sharedMaterial=material;
         var player=p.AddComponent<PlayerController2D>(); player.game=manager; player.visual=p.GetComponent<SpriteRenderer>();
         manager.player=player;
-        var hazards=new GameObject("Perigos").transform;
-        manager.hazards=new[] {
-            Hazard("Patrulha superior",hazards,manager,new Vector2(-9,4.65f),new Vector2(-3.8f,4.65f),new Vector2(1.2f,1.2f),2.8f,0),
-            Hazard("Barreira inferior",hazards,manager,new Vector2(.2f,-4.65f),new Vector2(6,-4.65f),new Vector2(1.5f,.7f),3.4f,2),
-            Hazard("Patrulha final",hazards,manager,new Vector2(10.5f,1.5f),new Vector2(14,1.5f),new Vector2(1.1f,1.1f),2.6f,1)
-        };
+        var tagSettings=new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+        tagSettings.FindProperty("layers").GetArrayElementAtIndex(8).stringValue="CourseWalls";
+        tagSettings.ApplyModifiedPropertiesWithoutUndo();
+        manager.levels=new[] { BuildLevel(manager,true), BuildLevel(manager,false) };
+        manager.levels[1].gameObject.SetActive(false);
         BuildHud(manager);
         EditorSceneManager.SaveScene(scene,ScenePath);
         EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(ScenePath,true)};
@@ -125,6 +102,124 @@ public static class CourseBuilder
         Debug.Log("PERCURSO: WebGL concluído. Bytes: "+report.summary.totalSize);
     }
 
+    private static CourseLevel BuildLevel(GameController game, bool tutorial)
+    {
+        var root = new GameObject(tutorial ? "Fase 01 — Tutorial" : "Fase 02 — Desafio");
+        var level = root.AddComponent<CourseLevel>();
+        level.title = tutorial ? "Tutorial" : "Desafio";
+        level.tutorial = tutorial;
+        level.timeLimit = tutorial ? 90 : 32;
+        var arena = root.transform;
+        Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
+        for(int i=-14;i<=14;i++) Box("Grade vertical",arena,new Vector2(i,0),new Vector2(.018f,12),Hex("203449"),-9);
+        for(int i=-5;i<=5;i++) Box("Grade horizontal",arena,new Vector2(0,i),new Vector2(29.6f,.018f),Hex("203449"),-9);
+        Wall("Limite superior",arena,new Vector2(0,6.15f),new Vector2(30.2f,.3f));
+        Wall("Limite inferior",arena,new Vector2(0,-6.15f),new Vector2(30.2f,.3f));
+        Wall("Limite esquerdo",arena,new Vector2(-15,0),new Vector2(.3f,12.6f));
+        Wall("Limite direito",arena,new Vector2(15,0),new Vector2(.3f,12.6f));
+        Box("Área inicial",arena,level.spawn,new Vector2(2.3f,2.2f),Hex("24465A"),-8);
+        WorldText("INÍCIO",arena,new Vector2(-13,-3.05f),.06f,Muted);
+        var goal=Box("Chegada",arena,new Vector2(13,4.6f),new Vector2(2.5f,2.2f),Hex("287860"),-8);
+        goal.AddComponent<BoxCollider2D>().isTrigger=true;
+        goal.AddComponent<FinishZone>().game=game;
+        WorldText("CHEGADA",arena,new Vector2(13,4.6f),.055f,Color.white);
+
+        if (tutorial)
+        {
+            Wall("Parede 01 — passe por cima",arena,new Vector2(-6,-1.25f),new Vector2(.8f,9.5f));
+            Wall("Parede 02 — passe por baixo",arena,new Vector2(3,1.25f),new Vector2(.8f,9.5f));
+            WorldText("PASSE POR CIMA  >",arena,new Vector2(-6,5.6f),.045f,Mint);
+            WorldText("PASSE POR BAIXO  >",arena,new Vector2(3,-5.6f),.045f,Mint);
+            WorldText("01 / MOVIMENTO",arena,new Vector2(-11,3.1f),.045f,Muted);
+            WorldText("02 / OBSERVE O CICLO",arena,new Vector2(-1,3.6f),.045f,Muted);
+            WorldText("03 / ATRAIA E DESVIE",arena,new Vector2(9,-4.9f),.045f,Muted);
+            level.blocks=new[] {
+                Hazard("Bloco superior",arena,game,new Vector2(-9,4.65f),new Vector2(-3.8f,4.65f),new Vector2(1,1),1.8f,0),
+                Hazard("Bloco inferior",arena,game,new Vector2(.2f,-4.65f),new Vector2(6,-4.65f),new Vector2(1.3f,.65f),2.2f,2)
+            };
+            level.traps=new[] { Trap(arena,game,new Vector2(-1.45f,.5f),new Vector2(8.1f,1.1f),3,1,2,0) };
+            level.slowZones=new[] { Slow(arena,new Vector2(-1.45f,-2.1f),new Vector2(6.5f,1.8f),.5f) };
+            level.enemies=new[] { Enemy(arena,game,new Vector2(10.5f,1.5f),new Vector2(12.5f,1.5f),new Rect(7,-1,7,6.3f),3.2f) };
+            level.pickups=new[] { Pickup(arena,game,new Vector2(-12,-.9f)) };
+        }
+        else
+        {
+            Wall("Parede 01 — cima",arena,new Vector2(-9,-1.25f),new Vector2(.8f,9.5f));
+            // A segunda parede oferece um atalho no meio; a passagem inferior é segura e lenta.
+            Wall("Parede 02 superior",arena,new Vector2(-3,3.45f),new Vector2(.8f,5.1f));
+            Wall("Parede 02 inferior",arena,new Vector2(-3,-2.2f),new Vector2(.8f,2.6f));
+            Wall("Parede 03 — cima",arena,new Vector2(3,-1.25f),new Vector2(.8f,9.5f));
+            Wall("Parede 04 — baixo",arena,new Vector2(9,1.25f),new Vector2(.8f,9.5f));
+            WorldText("ATALHO >",arena,new Vector2(-5.1f,.9f),.045f,Mint);
+            WorldText("ROTA SEGURA >",arena,new Vector2(-5.5f,-5.4f),.04f,Muted);
+            WorldText(">",arena,new Vector2(-9,5.6f),.06f,Mint);
+            WorldText(">",arena,new Vector2(3,5.6f),.06f,Mint);
+            WorldText(">",arena,new Vector2(9,-5.6f),.06f,Mint);
+            level.blocks=new[] {
+                Hazard("Bloco inicial",arena,game,new Vector2(-12,4.65f),new Vector2(-7.5f,4.65f),new Vector2(1.1f,1.1f),2.6f,0),
+                Hazard("Bloco central",arena,game,new Vector2(.5f,4.65f),new Vector2(5,4.65f),new Vector2(1.2f,1.1f),3,1),
+                Hazard("Bloco final",arena,game,new Vector2(10.5f,1.5f),new Vector2(14,1.5f),new Vector2(1.2f,1.2f),3.4f,1)
+            };
+            level.traps=new[] {
+                Trap(arena,game,new Vector2(-3,0),new Vector2(1.6f,1.8f),.7f,.8f,4.5f,1.5f),
+                Trap(arena,game,new Vector2(-.1f,2),new Vector2(5.1f,.9f),1.4f,.9f,2.7f,0),
+                Trap(arena,game,new Vector2(6.1f,-3),new Vector2(4.9f,.9f),1.8f,.9f,2.5f,1.2f)
+            };
+            level.slowZones=new[] {
+                Slow(arena,new Vector2(-6,-3.25f),new Vector2(4.9f,3.4f),.45f),
+                Slow(arena,new Vector2(6.1f,1.6f),new Vector2(4.9f,2),.55f)
+            };
+            level.enemies=new[] {
+                Enemy(arena,game,new Vector2(-7,2),new Vector2(-5,2),new Rect(-8.1f,-.8f,4.2f,6.1f),3.8f),
+                Enemy(arena,game,new Vector2(5,-.4f),new Vector2(7,-.4f),new Rect(3.9f,-2.1f,4.2f,7.3f),3.7f)
+            };
+            level.pickups=new[] { Pickup(arena,game,new Vector2(-13.6f,1.4f)) };
+        }
+        return level;
+    }
+
+    private static CycleTrap Trap(Transform parent,GameController game,Vector2 position,Vector2 size,float safe,float warning,float active,float offset)
+    {
+        var go=Box("Armadilha cíclica",parent,position,size,Hex("384F5C"),-5);
+        go.AddComponent<BoxCollider2D>().isTrigger=true;
+        var trap=go.AddComponent<CycleTrap>(); trap.game=game;
+        trap.safeSeconds=safe; trap.warningSeconds=warning; trap.activeSeconds=active; trap.phaseOffset=offset;
+        trap.label=WorldText("APAGADA",parent,position,.035f,Color.white,-4);
+        trap.label.transform.SetParent(go.transform,true);
+        return trap;
+    }
+    private static SlowZone Slow(Transform parent,Vector2 position,Vector2 size,float multiplier)
+    {
+        var go=Box("Piso lento",parent,position,size,Hex("255C83"),-7);
+        go.AddComponent<BoxCollider2D>().isTrigger=true;
+        var zone=go.AddComponent<SlowZone>(); zone.speedMultiplier=multiplier;
+        WorldText("PISO LENTO",parent,position,.04f,Hex("B5DFFF"),-6);
+        return zone;
+    }
+    private static ExtraLife Pickup(Transform parent,GameController game,Vector2 position)
+    {
+        var go=Box("Vida extra opcional",parent,position,new Vector2(.8f,.8f),Hex("583B67"),3);
+        go.AddComponent<BoxCollider2D>().isTrigger=true;
+        var pickup=go.AddComponent<ExtraLife>(); pickup.game=game;
+        var crossA=Box("Cruz vertical",parent,position,new Vector2(.2f,.65f),Hex("FFB2DE"),4);
+        var crossB=Box("Cruz horizontal",parent,position,new Vector2(.65f,.2f),Hex("FFB2DE"),4);
+        crossA.transform.SetParent(go.transform,true); crossB.transform.SetParent(go.transform,true);
+        var label=WorldText("+1 VIDA",parent,position+new Vector2(0,.8f),.045f,Hex("FFB2DE"),4);
+        label.transform.SetParent(go.transform,true);
+        return pickup;
+    }
+    private static ChaserEnemy Enemy(Transform parent,GameController game,Vector2 a,Vector2 b,Rect territory,float speed)
+    {
+        var go=Box("Inimigo perseguidor",parent,a,new Vector2(.9f,.9f),Hex("BF54A6"),4);
+        var body=go.AddComponent<Rigidbody2D>(); body.bodyType=RigidbodyType2D.Kinematic; body.interpolation=RigidbodyInterpolation2D.Interpolate;
+        go.AddComponent<BoxCollider2D>().isTrigger=true;
+        var enemy=go.AddComponent<ChaserEnemy>(); enemy.game=game; enemy.pointA=a; enemy.pointB=b;
+        enemy.territory=territory; enemy.chaseSpeed=speed; enemy.walls=1<<8;
+        enemy.label=WorldText("?",parent,a,.1f,Color.white,6);
+        enemy.label.transform.SetParent(go.transform,true);
+        return enemy;
+    }
+
     private static GameObject Box(string name,Transform parent,Vector2 position,Vector2 size,Color color,int order)
     {
         var go=new GameObject(name,typeof(SpriteRenderer));
@@ -135,7 +230,7 @@ public static class CourseBuilder
     }
     private static void Wall(string name,Transform parent,Vector2 position,Vector2 size)
     {
-        var go=Box(name,parent,position,size,Hex("576C80"),1); go.AddComponent<BoxCollider2D>();
+        var go=Box(name,parent,position,size,Hex("576C80"),1); go.layer=8; go.AddComponent<BoxCollider2D>();
         Box(name+" destaque",parent,position+new Vector2(0,size.y/2-.045f),new Vector2(size.x,.06f),Hex("8DA4B8"),2);
     }
     private static PatrolHazard Hazard(string name,Transform parent,GameController game,Vector2 a,Vector2 b,Vector2 size,float speed,float phase)
@@ -149,12 +244,13 @@ public static class CourseBuilder
         var hazard=go.AddComponent<PatrolHazard>(); hazard.game=game; hazard.pointA=a; hazard.pointB=b; hazard.speed=speed; hazard.phaseOffset=phase;
         return hazard;
     }
-    private static void WorldText(string value,Transform parent,Vector2 position,float size,Color color)
+    private static TextMesh WorldText(string value,Transform parent,Vector2 position,float size,Color color,int order=-6)
     {
-        var go=new GameObject(value,typeof(TextMesh)); go.transform.SetParent(parent); go.transform.position=new Vector3(position.x,position.y,.06f);
+        var go=new GameObject(value,typeof(TextMesh)); go.transform.SetParent(parent); go.transform.position=new Vector3(position.x,position.y,-order*.01f);
         var text=go.GetComponent<TextMesh>(); text.text=value; text.font=font; text.fontSize=64; text.characterSize=size;
         text.anchor=TextAnchor.MiddleCenter; text.alignment=TextAlignment.Center; text.color=color;
-        var renderer=go.GetComponent<MeshRenderer>(); renderer.sharedMaterial=font.material; renderer.sortingOrder=-6;
+        var renderer=go.GetComponent<MeshRenderer>(); renderer.sharedMaterial=font.material; renderer.sortingOrder=order;
+        return text;
     }
     private static void BuildHud(GameController game)
     {
@@ -173,7 +269,7 @@ public static class CourseBuilder
         Label("Tempo legenda",root,"TEMPO",new Vector2(910,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
         hud.timer=Label("Tempo",root,"60s",new Vector2(910,821),new Vector2(130,40),32,Color.white,TextAnchor.MiddleCenter,true);
         Label("Vidas legenda",root,"VIDAS",new Vector2(1080,855),new Vector2(100,22),13,Muted,TextAnchor.MiddleCenter);
-        hud.lives=Label("Vidas",root,"3 / 3",new Vector2(1080,821),new Vector2(130,40),28,Color.white,TextAnchor.MiddleCenter,true);
+        hud.lives=Label("Vidas",root,"1",new Vector2(1080,821),new Vector2(130,40),28,Color.white,TextAnchor.MiddleCenter,true);
         hud.best=Label("Recorde",root,"MELHOR  —",new Vector2(1260,836),new Vector2(200,30),16,Muted,TextAnchor.MiddleCenter);
         var pause=ButtonAt("Pausar",root,"PAUSA  II",new Vector2(1450,835),new Vector2(150,50),Hex("324B61"),Color.white);
         UnityEventTools.AddPersistentListener(pause.onClick,game.TogglePause);
@@ -181,7 +277,9 @@ public static class CourseBuilder
         hud.timerFill=Panel("Barra do tempo",root,new Vector2(800,777),new Vector2(1520,4),Mint);
         hud.timerFill.sprite=square; hud.timerFill.type=Image.Type.Filled; hud.timerFill.fillMethod=Image.FillMethod.Horizontal;
         Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(570,65),new Vector2(1020,30),18,Muted,TextAnchor.MiddleLeft);
-        Label("Objetivo",root,"VERDE = CHEGADA   /   LARANJA = PERIGO",new Vector2(1270,65),new Vector2(530,30),15,Mint,TextAnchor.MiddleRight);
+        Label("Objetivo",root,"CRUZ ROSA = +1 VIDA   /   VERDE = CHEGADA",new Vector2(1270,65),new Vector2(530,30),15,Mint,TextAnchor.MiddleRight);
+        Panel("Fundo da dica",root,new Vector2(800,117),new Vector2(1520,46),Hex("1D3043"));
+        hud.hint=Label("Dica",root,"",new Vector2(800,117),new Vector2(1480,42),18,Color.white,TextAnchor.MiddleCenter);
         var shade=Panel("Telas da partida",root,new Vector2(800,450),new Vector2(2000,1400),new Color(.025f,.05f,.08f,.91f));
         shade.raycastTarget=true; hud.overlay=shade.gameObject;
         var panel=Panel("Cartão",shade.transform,new Vector2(1000,700),new Vector2(880,690),Hex("1B2D40"));
@@ -197,6 +295,8 @@ public static class CourseBuilder
         UnityEventTools.AddPersistentListener(hud.primary.onClick,game.PrimaryAction);
         hud.secondary=ButtonAt("Voltar ao menu",card,"VOLTAR AO MENU",new Vector2(440,121),new Vector2(410,52),Hex("30475B"),Color.white);
         UnityEventTools.AddPersistentListener(hud.secondary.onClick,game.ReturnToMenu);
+        hud.challenge=ButtonAt("Desafio desbloqueado",card,"JOGAR DESAFIO",new Vector2(440,121),new Vector2(410,52),Hex("30475B"),Color.white);
+        UnityEventTools.AddPersistentListener(hud.challenge.onClick,game.StartChallenge);
         Label("Ajuda",card,"WASD ou setas para mover.  Controle: analógico / direcional.\nEnter / A confirma.  Esc / Start pausa.  R reinicia.",new Vector2(440,49),new Vector2(800,60),17,Muted,TextAnchor.MiddleCenter);
         var events=new GameObject("EventSystem",typeof(EventSystem),typeof(InputSystemUIInputModule));
         events.GetComponent<InputSystemUIInputModule>().AssignDefaultActions();

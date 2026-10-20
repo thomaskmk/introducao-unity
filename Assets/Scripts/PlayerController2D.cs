@@ -15,7 +15,18 @@ namespace ObstacleCourse
         private Vector2 movement;
         private float protectedUntil;
         private Color normalColor;
-        public Vector2 Position => body.position;
+        public Vector2 Position => body != null ? body.position : (Vector2)transform.position;
+        public bool IsProtected => game.IsPlaying && Time.time < protectedUntil;
+        public float SpeedMultiplier
+        {
+            get
+            {
+                float multiplier = 1;
+                foreach (var zone in game.Level.slowZones)
+                    if (zone.Contains(Position)) multiplier = Mathf.Min(multiplier, zone.speedMultiplier);
+                return multiplier;
+            }
+        }
 
         private void Awake()
         {
@@ -52,7 +63,7 @@ namespace ObstacleCourse
 
         private void FixedUpdate()
         {
-            body.linearVelocity = game.IsPlaying ? movement * speed : Vector2.zero;
+            body.linearVelocity = game.IsPlaying ? movement * speed * SpeedMultiplier : Vector2.zero;
             if (Mathf.Abs(body.position.x) > 16 || Mathf.Abs(body.position.y) > 8) ResetPlayer();
         }
 

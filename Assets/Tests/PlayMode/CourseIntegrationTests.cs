@@ -9,15 +9,33 @@ namespace ObstacleCourse.Tests
     public sealed class CourseIntegrationTests
     {
         private GameController game;
+        private readonly string[] savedKeys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v2.0", "ObstacleCourse.BestTime.v2.1" };
+        private readonly bool[] existed = new bool[3];
+        private readonly float[] saved = new float[3];
         [UnitySetUp] public IEnumerator LoadCourse()
         {
+            for (int i=0;i<savedKeys.Length;i++)
+            {
+                existed[i]=PlayerPrefs.HasKey(savedKeys[i]);
+                saved[i]=i==0 ? PlayerPrefs.GetInt(savedKeys[i]) : PlayerPrefs.GetFloat(savedKeys[i]);
+                PlayerPrefs.DeleteKey(savedKeys[i]);
+            }
             Time.timeScale=1;
             yield return SceneManager.LoadSceneAsync("Percurso",LoadSceneMode.Single);
             yield return null;
             game=Object.FindFirstObjectByType<GameController>();
             Assert.NotNull(game);
         }
-        [UnityTearDown] public IEnumerator CleanUp() { Time.timeScale=1; yield return null; }
+        [UnityTearDown] public IEnumerator CleanUp()
+        {
+            for(int i=0;i<savedKeys.Length;i++)
+            {
+                if (!existed[i]) PlayerPrefs.DeleteKey(savedKeys[i]);
+                else if(i==0) PlayerPrefs.SetInt(savedKeys[i],(int)saved[i]);
+                else PlayerPrefs.SetFloat(savedKeys[i],saved[i]);
+            }
+            PlayerPrefs.Save(); Time.timeScale=1; yield return null;
+        }
 
         [UnityTest] public IEnumerator StartsAtMenuAndRestartRestoresPlayerAndRules()
         {
@@ -25,12 +43,12 @@ namespace ObstacleCourse.Tests
             Assert.IsTrue(game.hud.overlay.activeSelf);
             game.StartRun(); yield return null;
             game.player.GetComponent<Rigidbody2D>().position=Vector2.zero;
-            game.TakeDamage(); game.Session.Tick(60); yield return null;
+            game.TakeDamage(); game.Session.Tick(100); yield return null;
             Assert.AreEqual(RunState.Lost,game.Session.State);
             Assert.IsTrue(game.hud.overlay.activeSelf);
             game.StartRun(); yield return null;
-            Assert.AreEqual(3,game.Session.Lives);
-            Assert.Greater(game.Session.Remaining,59);
+            Assert.AreEqual(1,game.Session.Lives);
+            Assert.Greater(game.Session.Remaining,89);
             Assert.Less(Vector2.Distance(game.player.Position,game.player.spawn),.01f);
             Assert.IsFalse(game.hud.overlay.activeSelf);
         }
@@ -45,11 +63,11 @@ namespace ObstacleCourse.Tests
         }
         [UnityTest] public IEnumerator HazardCollisionRemovesOneLifeWithProtection()
         {
-            game.StartRun(); game.player.enabled=false;
-            game.player.GetComponent<Rigidbody2D>().position=game.hazards[0].GetComponent<Rigidbody2D>().position;
+            game.StartRun(); game.Session.CollectLife(); game.player.enabled=false;
+            game.player.GetComponent<Rigidbody2D>().position=game.Level.blocks[0].GetComponent<Rigidbody2D>().position;
             for(int i=0;i<5;i++) yield return new WaitForFixedUpdate();
-            Assert.AreEqual(2,game.Session.Lives);
-            game.player.TouchHazard(); Assert.AreEqual(2,game.Session.Lives);
+            Assert.AreEqual(1,game.Session.Lives);
+            game.player.TouchHazard(); Assert.AreEqual(1,game.Session.Lives);
         }
         [UnityTest] public IEnumerator FinishTriggerWinsAndFreezesTheClock()
         {

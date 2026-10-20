@@ -5,20 +5,25 @@ namespace ObstacleCourse
 {
     public sealed class GameController : MonoBehaviour
     {
-        [Min(1)] public float timeLimit = 60;
-        [Min(1)] public int initialLives = 3;
+        public CourseLevel[] levels;
         public PlayerController2D player;
-        public PatrolHazard[] hazards;
         public CourseHud hud;
         public RunSession Session { get; private set; }
+        public int LevelIndex { get; private set; }
+        public CourseLevel Level => levels[LevelIndex];
         public bool IsPlaying => Session != null && Session.State == RunState.Playing;
-        private RunState displayedState = (RunState)(-1);
-        private const string BestTimeKey = "ObstacleCourse.BestTime.v1";
+        public bool HasNextLevel => LevelIndex + 1 < levels.Length;
+        public bool ChallengeUnlocked => PlayerPrefs.GetInt("ObstacleCourse.ChallengeUnlocked.v2", 0) == 1;
         public float BestTime => PlayerPrefs.GetFloat(BestTimeKey, 0);
+        public string Hint => IsPlaying && Time.time < noticeUntil ? notice : Level.Hint(player.Position);
+        private string BestTimeKey => "ObstacleCourse.BestTime.v2." + LevelIndex;
+        private RunState displayedState = (RunState)(-1);
+        private string notice;
+        private float noticeUntil;
 
         private void Awake()
         {
-            Session = new RunSession(timeLimit, initialLives);
+            SelectLevel(0);
             Application.targetFrameRate = 60;
         }
         private void Start() { PresentState(); }
@@ -33,25 +38,45 @@ namespace ObstacleCourse
             if (Session.State != displayedState) PresentState();
             hud.Refresh(this);
         }
+        private void SelectLevel(int index)
+        {
+            LevelIndex = index;
+            Session = new RunSession(Level.timeLimit, 1, 2);
+            for (int i = 0; i < levels.Length; i++) levels[i].gameObject.SetActive(i == index);
+            player.spawn = Level.spawn;
+            noticeUntil = 0;
+        }
         public void PrimaryAction()
         {
-            if (Session.State == RunState.Paused) Session.Resume();
+            if (Session.State == RunState.Paused) { Session.Resume(); PresentState(); }
+            else if (Session.State == RunState.Won && HasNextLevel)
+            {
+                SelectLevel(LevelIndex + 1);
+                StartRun();
+            }
             else StartRun();
-            PresentState();
+        }
+        public void StartChallenge()
+        {
+            if (!ChallengeUnlocked || Session.State != RunState.Menu) return;
+            SelectLevel(1);
+            StartRun();
         }
         public void StartRun()
         {
             Session.Begin();
+            noticeUntil = 0;
             player.ResetPlayer();
-            foreach (var hazard in hazards) hazard.ResetHazard();
+            Level.ResetLevel();
+            Physics2D.SyncTransforms();
             PresentState();
-            Debug.Log($"PARTIDA: início — {Session.Duration} segundos, {Session.MaximumLives} vidas.");
+            Debug.Log($"PARTIDA: fase {LevelIndex + 1} — início — {Session.Duration}s, {Session.Lives} vida.");
         }
         public void ReturnToMenu()
         {
-            Session.ReturnToMenu();
+            SelectLevel(0);
             player.ResetPlayer();
-            foreach (var hazard in hazards) hazard.ResetHazard();
+            Level.ResetLevel();
             PresentState();
         }
         public void TogglePause()
@@ -62,18 +87,29 @@ namespace ObstacleCourse
         }
         public void TakeDamage()
         {
-            if (Session.TakeDamage()) Debug.Log("PARTIDA: dano — vidas: " + Session.Lives);
+            if (Session.TakeDamage())
+            {
+                Debug.Log("PARTIDA: dano — vidas: " + Session.Lives);
+                Notify("IMPACTO ABSORVIDO! Você pode avançar durante a breve invulnerabilidade.");
+            }
             if (Session.State != displayedState) PresentState();
         }
+        public bool CollectLife()
+        {
+            if (!Session.CollectLife()) return false;
+            Notify("+1 VIDA! Você pode absorver um impacto. O personagem pisca durante a proteção.");
+            Debug.Log("PARTIDA: vida extra coletada — vidas: " + Session.Lives);
+            hud.Refresh(this);
+            return true;
+        }
+        private void Notify(string text) { notice = text; noticeUntil = Time.time + 4; }
         public void ReachFinish()
         {
             if (!IsPlaying) return;
             Session.Win();
-            if (BestTime <= 0 || Session.Elapsed < BestTime)
-            {
-                PlayerPrefs.SetFloat(BestTimeKey, Session.Elapsed);
-                PlayerPrefs.Save();
-            }
+            if (BestTime <= 0 || Session.Elapsed < BestTime) PlayerPrefs.SetFloat(BestTimeKey, Session.Elapsed);
+            if (HasNextLevel) PlayerPrefs.SetInt("ObstacleCourse.ChallengeUnlocked.v2", 1);
+            PlayerPrefs.Save();
             PresentState();
         }
         private void PresentState()
@@ -82,7 +118,7 @@ namespace ObstacleCourse
             Time.timeScale = IsPlaying ? 1 : 0;
             hud.ShowState(this);
             if (Session.State == RunState.Won || Session.State == RunState.Lost)
-                Debug.Log($"PARTIDA: {Session.State}; tempo: {Session.Elapsed:F2}; vidas: {Session.Lives}; pontos: {Session.Score}");
+                Debug.Log($"PARTIDA: fase {LevelIndex + 1}; {Session.State}; tempo: {Session.Elapsed:F2}; vidas: {Session.Lives}; pontos: {Session.Score}");
         }
         private void OnApplicationFocus(bool focused)
         {

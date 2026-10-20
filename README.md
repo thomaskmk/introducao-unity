@@ -4,17 +4,18 @@ Protótipo de um jogo 2D visto de cima, desenvolvido para a disciplina de Jogos 
 
 Chegue à área verde antes de acabar o tempo. Contorne as paredes e evite as patrulhas laranja. Coletar itens não é condição de vitória.
 
-## Primeira versão
+## Duas fases
 
-- Uma fase com duas passagens obrigatórias e três perigos móveis.
-- Movimento por física 2D, colisão com paredes e velocidade diagonal limitada.
-- Partidas de 60 segundos e três vidas; proteção de 1,5 segundo após sofrer dano.
-- Menu inicial, pausa, vitória, derrota por tempo ou vidas, reinício e retorno ao menu.
-- Tempo, vidas e melhor tempo local na interface. A vitória mostra pontuação por tempo restante e vidas preservadas.
-- Entrada de teclado e controle; suporte ao controle ainda precisa de teste com dispositivo físico.
+- **Tutorial (90 segundos):** mantém o percurso inicial, apresenta blocos móveis, vida extra, armadilha cíclica, piso lento e um perseguidor. Dicas mudam conforme o trecho.
+- **Desafio (32 segundos):** quatro paredes, três blocos móveis, dois perseguidores, três armadilhas e dois pisos lentos. A passagem central da segunda parede é um atalho perigoso; a passagem inferior é segura e mais lenta.
+- Cada tentativa começa com **uma vida**. Existe **uma vida extra opcional por fase**, com limite de duas vidas. Vencer depende somente de alcançar a chegada a tempo.
+- Ao sobreviver a um impacto, o jogador permanece no lugar e fica invulnerável por **1,5 segundo**, piscando. É possível gastar a vida extra para atravessar um perigo mais rápido. Piso lento continua reduzindo a velocidade durante a proteção.
+- Reiniciar restaura o tempo, a vida inicial, o item e os inimigos da fase atual. Vidas não passam de uma fase para outra.
+- Terminar o tutorial libera o desafio, inclusive pelo menu em visitas seguintes no mesmo navegador. Recordes são separados por fase.
+- Menu, pausa, vitória, derrota por tempo ou dano, reinício e retorno ao menu. Entrada de teclado e controle; o controle ainda precisa de teste com dispositivo físico.
 - Build WebGL com carregamento e botão de tela cheia.
 
-Arte temática, música, efeitos, itens opcionais, atalho e expansão da fase ficam para as próximas etapas. Esta versão não representa a conclusão de todos os critérios da entrega final.
+A arte permanece geométrica e provisória. Arte temática, música, efeitos sonoros e refinamento de dificuldade ficam para as próximas etapas. Os limites de tempo são valores iniciais para testes, não uma conclusão de todos os critérios da entrega final.
 
 ## Controles
 
@@ -52,7 +53,7 @@ bash scripts/package-web.sh
 
 Para outra instalação, defina `UNITY_EDITOR` com o caminho do executável. Os relatórios ficam em `TestResults/` e a versão WebGL em `Builds/WebGL/`. Não há automação de Local Environment do Codex configurada; esses comandos são o fluxo documentado do projeto.
 
-Os sete testes de regras e cinco testes de integração cobrem estados finais, tempo, vidas, pausa, reinício e colisões reais com parede, perigo e chegada.
+Os testes cobrem regras da partida, vida extra e invulnerabilidade, progressão entre fases, reinício, pausa, ciclo das armadilhas, piso lento, perseguição e colisões reais. Os relatórios do Test Runner indicam os resultados de cada execução.
 
 ## Publicação
 
@@ -67,7 +68,7 @@ O código está no [repositório público](https://github.com/thomaskmk/introduc
 - Autor do projeto: **thomaskmk**; substituir pelo nome completo na página de entrega.
 - [Tutorial da disciplina: Introdução Rápida](https://slender-ceder-1da.notion.site/Tutorial-Introdu-o-R-pida-1a6d1ae1773780a7a59cf823a8b599ec): conceitos de objetos, componentes, física, scripts, triggers, interface e fim de partida.
 - [Enunciado do projeto](https://docs.google.com/document/d/1fy-NeFFVT3tUe1lplrUzKLuoy-goAoKWvLZV1D5I__Y/edit).
-- Código desta primeira versão e gráficos geométricos: produzidos com apoio do **Codex/OpenAI**. O responsável pelo projeto deve revisar e compreender os scripts.
+- Código do protótipo e gráficos geométricos: produzidos com apoio do **Codex/OpenAI**. O responsável pelo projeto deve revisar e compreender os scripts.
 - Cena e recursos iniciais, fonte interna e pacotes: **Unity Technologies**, modelo Universal 2D.
 - Regras de exclusão baseadas no [Unity.gitignore do GitHub](https://github.com/github/gitignore/blob/main/Unity.gitignore).
 

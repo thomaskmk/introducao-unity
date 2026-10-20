@@ -10,6 +10,8 @@ namespace ObstacleCourse
         public Text lives;
         public Text best;
         public Text status;
+        public Text hint;
+        public Button challenge;
         public Image timerFill;
         public GameObject overlay;
         public Text title;
@@ -29,9 +31,10 @@ namespace ObstacleCourse
             timer.color = run.Remaining <= 10 ? dangerColor : Color.white;
             timerFill.fillAmount = run.Remaining / run.Duration;
             timerFill.color = run.Remaining <= 10 ? dangerColor : normalColor;
-            lives.text = run.Lives + " / " + run.MaximumLives;
+            lives.text = run.Lives.ToString();
             best.text = game.BestTime > 0 ? "MELHOR  " + game.BestTime.ToString("F1") + "s" : "MELHOR  —";
-            status.text = run.State == RunState.Playing ? (run.Remaining <= 10 ? "ÚLTIMOS SEGUNDOS!" : "ALCANCE A CHEGADA") : "PERCURSO 01";
+            status.text = $"0{game.LevelIndex + 1} / {game.Level.title.ToUpper()}" + (run.Remaining <= 10 ? "  •  CORRA!" : "");
+            hint.text = game.Hint;
         }
         public void ShowState(GameController game)
         {
@@ -41,13 +44,14 @@ namespace ObstacleCourse
             Refresh(game);
             if (!show) { if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null); return; }
             secondary.gameObject.SetActive(run.State != RunState.Menu);
+            challenge.gameObject.SetActive(run.State == RunState.Menu && game.ChallengeUnlocked);
             result.text = "";
             if (run.State == RunState.Menu)
             {
-                subtitle.text = "PROTÓTIPO  /  PERCURSO 01";
+                subtitle.text = "DUAS FASES  /  UMA VIDA POR TENTATIVA";
                 title.text = "CONTRA O\nRELÓGIO";
-                description.text = $"Atravesse o percurso e alcance a área verde.\nDesvie dos perigos laranja. Você tem {run.Duration:0} segundos e {run.MaximumLives} vidas.";
-                primaryLabel.text = "COMEÇAR";
+                description.text = "Aprenda no tutorial e enfrente o desafio. Alcance a área verde.\nA cruz rosa dá uma vida extra opcional. Use-a para arriscar.";
+                primaryLabel.text = "INICIAR TUTORIAL";
             }
             else if (run.State == RunState.Paused)
             {
@@ -60,10 +64,10 @@ namespace ObstacleCourse
             {
                 bool won = run.State == RunState.Won;
                 subtitle.text = won ? "CHEGADA ALCANÇADA" : "TENTE UMA NOVA ROTA";
-                title.text = won ? "PERCURSO\nCONCLUÍDO" : "FIM DE\nPARTIDA";
-                description.text = won ? "Você chegou a tempo.\nConsegue fazer um percurso ainda mais rápido?" : run.EndReason + "\nObserve o ritmo dos perigos e tente de novo.";
-                result.text = $"TEMPO  {run.Elapsed:F1}s     VIDAS  {run.Lives}/{run.MaximumLives}     PONTOS  {run.Score}";
-                primaryLabel.text = "JOGAR NOVAMENTE";
+                title.text = won ? (game.HasNextLevel ? "TUTORIAL\nCONCLUÍDO" : "DESAFIO\nSUPERADO!") : "FIM DE\nPARTIDA";
+                description.text = won ? (game.HasNextLevel ? "Você aprendeu os perigos. Agora combine o que aprendeu.\nA próxima fase começa com uma vida e seu próprio relógio." : "Você concluiu as duas fases!\nTente uma rota mais rápida para melhorar seu tempo.") : run.EndReason + "\nTente novamente esta fase. A vida extra reaparece.";
+                result.text = $"TEMPO  {run.Elapsed:F1}s     VIDAS  {run.Lives}     PONTOS  {run.Score}";
+                primaryLabel.text = won && game.HasNextLevel ? "PRÓXIMA FASE" : "REPETIR FASE";
             }
             if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(primary.gameObject);
         }
