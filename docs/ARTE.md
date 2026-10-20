@@ -1,6 +1,6 @@
 # Arte — fuga da prisão
 
-As duas fases usam o mesmo conjunto de pixel art: piso de concreto, grades, prisioneiro, guardas, máquinas e pisos especiais. O layout aprovado em ed4852f foi preservado. A reconstrução foi comparada à cena anterior: 79 registros de física e regras idênticos, incluindo posições, rotações, escalas, colliders, corpos físicos, tempos, velocidades, limites de patrulha e composição das fases. O tutorial e o desafio permanecem na versão de percurso 4.
+As duas fases usam o mesmo conjunto de pixel art: piso de concreto, grades, prisioneiro, guardas, máquinas e pisos especiais. O layout aprovado em ed4852f foi preservado. Na revisão das dicas e sinalização, a auditoria dos 79 registros contra f9e547c encontrou apenas as alterações previstas: velocidade do jogador de 5 para 4,5 e versão de recordes de 4 para 5. Posições, rotações, escalas, colliders, corpos físicos, tempos dos perigos, patrulhas e composição das fases foram preservados.
 
 ## Origem das artes
 
@@ -14,7 +14,9 @@ O concreto vem de Modern Interiors Free. As grades usam módulos repetidos com b
 
 PrisonCharacterVisual anima prisioneiro e guardas nas quatro direções, com repouso e três quadros de caminhada. A animação acompanha o deslocamento real, pausa com o jogo e reinicia com a tentativa. Os guardas mantêm os indicadores de atenção/perseguição sobre a cabeça. O comportamento de detecção e perseguição continua em ChaserEnemy.
 
-PrisonTrapVisual usa o mesmo relógio da armadilha: cinza apagado, amarelo de aviso e vermelho ativo. A textura azul representa uma área alagada, com limite visual exatamente no contorno do piso lento. A saída tem concreto verde e marcação de borda dentro da área original. As placas didáticas permanecem apenas no tutorial.
+PrisonTrapVisual usa o mesmo relógio da armadilha. Faixas amarelas e pretas delimitam a grade de alta tensão. Sem corrente, há marcas de confirmação verdes; durante o aviso, aparecem exclamações amarelas; quando ativo, o piso fica vermelho e surgem descargas brancas. A pulsação suave das descargas para na pausa. Todos os sinais ficam dentro da área de dano existente. No tutorial, o estado informa “SEM CORRENTE · PODE PASSAR”, “LIGANDO · AGUARDE” ou “ELETRIFICADO · NÃO PISE”. Os sinais complementares usam os sprites geométricos já existentes; não foram geradas novas imagens nesta revisão.
+
+A textura azul representa uma área alagada, com limite visual exatamente no contorno do piso lento. A saída tem concreto verde e marcação de borda dentro da área original. Os nomes dos portões e as placas explicativas fixas foram removidos. TutorialGuide mostra uma explicação por aproximação, aponta para o elemento correspondente, evita cobrir o personagem e desaparece fora da região, na pausa, no menu e no desafio. Não adiciona colliders nem interrompe o relógio.
 
 Os sprites usam filtro Point, sem mipmaps ou compressão. Os personagens gerados são recortados por faixas transparentes; não se presume que a folha tenha células uniformes. O desenho dos personagens ocupa espaço acima dos pés, como em um jogo visto de cima; as colisões originais de 0,7 para o jogador e 0,9 para os guardas permanecem iguais.
 
@@ -76,10 +78,19 @@ Use case: stylized-concept. Asset type: ONE narrow vertical rectangular moving p
 
 Ferramenta: imagegen integrado. Referência de estilo: Assets/Art/Prison/Generated/Slider.png. Transparência: true. Arquivo final: Assets/Art/Prison/Generated/Piston.png.
 
-## Verificação da integração completa
+## Verificação da integração completa (f9e547c)
 
 - Comparação da cena com a versão aprovada ed4852f: 79 registros de física e regras idênticos. A comparação foi repetida após o ajuste das placas.
 - 22 testes PlayMode aprovados: mecânicas anteriores e novos testes de animação, perseguição, pausa, reinício, troca de fase e cores dos três estados do piso de segurança.
 - WebGL compilado no Unity 6000.3.26f1. Inspeção no navegador das duas fases, movimento do prisioneiro, patrulha animada dos três guardas do desafio, pisos, máquinas e placas do tutorial.
 - Os três estados do piso de segurança também foram conferidos visualmente no navegador; nenhum erro ou aviso apareceu no console durante a inspeção.
 - Os limites de tempo, o número de inimigos, as regras de dano e os recordes da versão 4 foram preservados.
+
+
+## Revisão das dicas e da grade elétrica
+
+- Velocidade do prisioneiro: 4,5 unidades/s, redução de 10%. Tempos das fases e dos perigos mantidos; recordes separados na versão 5, sem apagar o desbloqueio do desafio.
+- Auditoria contra f9e547c: 79 registros, com diferenças somente na velocidade do jogador e na versão dos recordes. Nova reconstrução após os ajustes de apresentação: 79 registros idênticos.
+- 23 testes PlayMode aprovados. Incluem sete regiões de dicas, apontamento do alvo, caixa fora do personagem, saída da região, pausa, reinício e troca de fase; também verificam símbolos e texto dos três estados, descargas pausadas e travessias dos portões na velocidade real do personagem.
+- A grade mantém as mesmas durações e a mesma regra de dano: o aviso amarelo ainda não causa dano; a corrente vermelha causa dano inclusive ao personagem já dentro da área.
+- Conferência WebGL final: primeiro portão atravessado com teclado, dica seguinte reposicionada para manter o portão e a grade elétrica visíveis, estados seguro/aviso/ativo presentes simultaneamente no desafio e console sem erros ou avisos. O teste de dicas foi repetido após o ajuste de posição e antecipação do alerta.

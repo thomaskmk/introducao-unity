@@ -25,18 +25,8 @@ namespace ObstacleCourse
 
         public string Hint(Vector2 position)
         {
-            if (!tutorial) return "Alcance a chegada antes do tempo acabar. Um impacto encerra a tentativa.";
-            if (position.x < -6.5f && position.y < 2.5f)
-                return "WASD / setas. Espere o braço abrir passagem à direita do eixo e acompanhe o giro.";
-            if (position.x < -3.5f && position.y > 2.5f)
-                return "Bloco móvel: por cima é mais seguro; por baixo é mais rápido. Espere a abertura.";
-            if (position.x < 3.5f)
-            {
-                if (position.y > 1.4f) return "O pêndulo vai e volta. Espere a barra se afastar para passar.";
-                if (position.y > -1) return "Armadilha: APAGADA → AVISO amarelo → ATIVA vermelha. Atravesse apagada.";
-                return "O piso azul reduz a velocidade. Depois, contorne a parede por baixo.";
-            }
-            return "Aproxime-se do vão para atrair o guarda. Recue, contorne-o e atravesse a passagem que ele deixou.";
+            return tutorial ? "Encontre a saída. As dicas aparecem ao se aproximar dos perigos."
+                : "Fuja antes do tempo acabar. Um impacto encerra a tentativa.";
         }
     }
 }

@@ -110,7 +110,7 @@ public static class CourseBuilder
         level.title = tutorial ? "Tutorial" : "Desafio";
         level.tutorial = tutorial;
         level.timeLimit = tutorial ? 90 : 38;
-        level.layoutVersion = 4;
+        level.layoutVersion = 5; // New records: movement is now 10% slower.
         level.spawn = new Vector2(-13,-4.5f);
         var arena = root.transform;
         Box("Piso",arena,Vector2.zero,new Vector2(29.8f,12.2f),Hex("182A3C"),-10);
@@ -132,12 +132,6 @@ public static class CourseBuilder
         {
             Wall("Parede 01 — passe por cima",arena,new Vector2(-6.1f,-1.25f),new Vector2(.8f,9.5f));
             Wall("Parede 02 — passe por baixo",arena,new Vector2(3,1.25f),new Vector2(.8f,9.5f));
-            WorldText("POR CIMA: MAIS SEGURO  >",arena,new Vector2(-6,5.6f),.037f,Mint);
-            WorldText("POR BAIXO: ATALHO  >",arena,new Vector2(-6,3.85f),.035f,Mint);
-            WorldText("PASSE POR BAIXO  >",arena,new Vector2(3,-5.6f),.045f,Mint);
-            WorldText("BARRA GIRATÓRIA",arena,new Vector2(-11,1.8f),.04f,Muted);
-            WorldText("PÊNDULO",arena,new Vector2(-1.3f,4.7f),.04f,Muted);
-            WorldText("ATRAIA O GUARDA E CONTORNE",arena,new Vector2(9,-2.7f),.043f,Muted);
             level.blocks=new[] {
                 Hazard("Bloco superior",arena,game,new Vector2(-9,4.65f),new Vector2(-3.8f,4.65f),new Vector2(1,1),1.8f,0),
                 Hazard("Bloco inferior",arena,game,new Vector2(.2f,-4.65f),new Vector2(6,-4.65f),new Vector2(1.3f,.65f),2.2f,2)
@@ -227,7 +221,7 @@ public static class CourseBuilder
         var trap=go.AddComponent<CycleTrap>(); trap.game=game;
         trap.safeSeconds=safe; trap.warningSeconds=warning; trap.activeSeconds=active; trap.phaseOffset=offset;
         if(showLabel) {
-            trap.label=WorldText("APAGADA",parent,position,.035f,Color.white,-4);
+            trap.label=WorldText("SEM CORRENTE · PODE PASSAR",parent,position+Vector2.down*(size.y/2+.48f),.05f,Color.white,-3);
             trap.label.transform.SetParent(go.transform,true);
         }
         return trap;
@@ -237,7 +231,6 @@ public static class CourseBuilder
         var go=Box("Piso lento",parent,position,size,Hex("255C83"),-7);
         go.AddComponent<BoxCollider2D>().isTrigger=true;
         var zone=go.AddComponent<SlowZone>(); zone.speedMultiplier=multiplier;
-        if(showLabel) WorldText("PISO LENTO",parent,position,.04f,Hex("B5DFFF"),-6);
         return zone;
     }
     private static ChaserEnemy Enemy(Transform parent,GameController game,Vector2 a,Vector2 b,Rect territory,float speed)
@@ -310,8 +303,8 @@ public static class CourseBuilder
         hud.timerFill.sprite=square; hud.timerFill.type=Image.Type.Filled; hud.timerFill.fillMethod=Image.FillMethod.Horizontal;
         Label("Controles",root,"WASD / SETAS  mover     •     ESC / P  pausar     •     R  reiniciar",new Vector2(570,65),new Vector2(1020,30),18,Muted,TextAnchor.MiddleLeft);
         Label("Objetivo",root,"UM IMPACTO ENCERRA A TENTATIVA",new Vector2(1270,65),new Vector2(530,30),15,Mint,TextAnchor.MiddleRight);
-        Panel("Fundo da dica",root,new Vector2(800,117),new Vector2(1520,46),Hex("1D3043"));
-        hud.hint=Label("Dica",root,"",new Vector2(800,117),new Vector2(1480,42),18,Color.white,TextAnchor.MiddleCenter);
+        hud.hint=Label("Dica",root,"",new Vector2(800,117),new Vector2(1480,42),18,Muted,TextAnchor.MiddleCenter);
+        BuildTutorialGuide(game, hud, root);
         var shade=Panel("Telas da partida",root,new Vector2(800,450),new Vector2(2000,1400),new Color(.025f,.05f,.08f,.91f));
         shade.raycastTarget=true; hud.overlay=shade.gameObject;
         var panel=Panel("Cartão",shade.transform,new Vector2(1000,700),new Vector2(880,690),Hex("1B2D40"));
@@ -339,6 +332,38 @@ public static class CourseBuilder
         var go=new GameObject(name,typeof(RectTransform)); var rect=go.GetComponent<RectTransform>(); rect.SetParent(parent,false);
         rect.anchorMin=rect.anchorMax=Vector2.zero; rect.pivot=new Vector2(.5f,.5f); rect.anchoredPosition=position; rect.sizeDelta=size;
         return rect;
+    }
+    private static void BuildTutorialGuide(GameController game, CourseHud hud, RectTransform root)
+    {
+        var guide = root.gameObject.AddComponent<TutorialGuide>();
+        hud.guide = guide; guide.layout = root;
+        Color gold = Hex("F1CD78");
+        guide.pointer = Panel("Linha da dica", root, Vector2.zero, new Vector2(1, 2), gold).rectTransform;
+        guide.marker = Panel("Alvo da dica", root, Vector2.zero, new Vector2(8, 8), gold).rectTransform;
+        guide.card = Panel("Dica contextual", root, Vector2.zero, new Vector2(360, 114), Hex("252C38")).rectTransform;
+        Panel("Acento da dica", guide.card, new Vector2(2, 57), new Vector2(4, 114), gold);
+        guide.message = Label("Explicação", guide.card, "", new Vector2(184, 57), new Vector2(324, 96), 18, Color.white, TextAnchor.MiddleLeft);
+        var level = game.levels[0];
+        guide.tips = new[] {
+            Tip(new Rect(-14.85f,-4.9f,8.35f,5), level.rotors[0].transform, new Vector2(-10.7f,2.6f),
+                "Use WASD ou as setas. Espere a abertura à direita do eixo e acompanhe o giro para passar."),
+            Tip(new Rect(-14.85f,2,9.15f,4), level.blocks[0].transform, new Vector2(-10.7f,0),
+                "Por cima do portão é mais seguro. Por baixo, o atalho é mais rápido, mas exige acertar o momento."),
+            Tip(new Rect(-5.7f,2.25f,8.3f,3.75f), level.rotors[1].transform, new Vector2(-1.45f,-2.7f),
+                "Este portão vai e volta. Espere ele se afastar e atravesse antes que retorne."),
+            Tip(new Rect(-5.7f,-.6f,8.3f,2.85f), level.traps[0].transform, new Vector2(-1.45f,3.4f),
+                "Este piso dá choque. Passe sem corrente; no alerta amarelo, espere. O piso vermelho é fatal."),
+            Tip(new Rect(-5.7f,-3.3f,8.3f,2.7f), level.slowZones[0].transform, new Vector2(-1.45f,1.25f),
+                "O piso molhado deixa você mais lento. Contorne a água para ganhar tempo."),
+            Tip(new Rect(-5.7f,-6,12.1f,2.7f), level.blocks[1].transform, new Vector2(5.1f,-1.6f),
+                "A passagem continua por baixo da parede. Espere o portão se afastar antes de contorná-la."),
+            Tip(new Rect(7,-2.8f,7.85f,4.9f), level.enemies[0].transform, new Vector2(10.8f,4.6f),
+                "Aproxime-se para atrair o guarda. Recue, dê a volta nele e use a passagem que ele deixou livre.")
+        };
+    }
+    private static TutorialGuide.Tip Tip(Rect area, Transform target, Vector2 cardPosition, string message)
+    {
+        return new TutorialGuide.Tip { area = area, target = target, cardPosition = cardPosition, message = message };
     }
     private static Image Panel(string name,Transform parent,Vector2 position,Vector2 size,Color color)
     {

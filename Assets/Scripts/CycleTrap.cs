@@ -29,8 +29,13 @@ namespace ObstacleCourse
             Phase = PhaseAt(game.Session == null ? 0 : game.Session.Elapsed);
             visual.color = Phase == TrapPhase.Safe ? new Color(.22f, .31f, .36f)
                 : Phase == TrapPhase.Warning ? new Color(1, .78f, .22f) : new Color(.96f, .25f, .25f);
-            if (label != null) label.text = Phase == TrapPhase.Safe ? "APAGADA"
-                : Phase == TrapPhase.Warning ? "AVISO!" : "ATIVA!";
+            if (label != null)
+            {
+                label.text = Phase == TrapPhase.Safe ? "SEM CORRENTE · PODE PASSAR"
+                    : Phase == TrapPhase.Warning ? "LIGANDO · AGUARDE" : "ELETRIFICADO · NÃO PISE";
+                label.color = Phase == TrapPhase.Safe ? new Color(.48f, 1, .78f)
+                    : Phase == TrapPhase.Warning ? new Color(1, .84f, .35f) : new Color(1, .60f, .53f);
+            }
         }
         private void OnTriggerEnter2D(Collider2D other) { Hit(other); }
         private void OnTriggerStay2D(Collider2D other) { Hit(other); }

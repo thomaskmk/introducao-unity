@@ -11,6 +11,7 @@ namespace ObstacleCourse
         public Text best;
         public Text status;
         public Text hint;
+        public TutorialGuide guide;
         public Button challenge;
         public Image timerFill;
         public GameObject overlay;
@@ -35,6 +36,7 @@ namespace ObstacleCourse
             best.text = game.BestTime > 0 ? "MELHOR  " + game.BestTime.ToString("F1") + "s" : "MELHOR  —";
             status.text = $"0{game.LevelIndex + 1} / {game.Level.title.ToUpper()}" + (run.Remaining <= 10 ? "  •  CORRA!" : "");
             hint.text = game.Hint;
+            if (guide != null) guide.Refresh(game);
         }
         public void ShowState(GameController game)
         {

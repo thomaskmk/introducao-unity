@@ -134,7 +134,8 @@ public static class PrisonArtBuilder
             var view = trap.gameObject.AddComponent<PrisonTrapVisual>();
             view.trap = trap; view.prototype = trap.GetComponent<SpriteRenderer>(); view.surface = surface;
             view.prototype.enabled = false;
-            surface.color = PrisonTrapVisual.ColorFor(trap.PhaseAt(0));
+            DressElectricalSignals(root, trap, size, view);
+            view.Refresh();
         }
         foreach (var zone in level.slowZones)
         {
@@ -178,19 +179,57 @@ public static class PrisonArtBuilder
 
     private static void DressLabels(CourseLevel level, Transform root)
     {
-        if (!level.tutorial) return;
-        foreach (var text in level.GetComponentsInChildren<TextMesh>(true))
+        // The floor's live status is the only instruction printed in the arena.
+        // Explanations live in the proximity guide, not permanent signs.
+        foreach (var trap in level.traps)
         {
-            if (!text.gameObject.activeSelf || text.name == "CHEGADA" || text.GetComponentInParent<ChaserEnemy>() != null) continue;
-            if (text.name == "BARRA GIRATÓRIA") text.text = "BRAÇO GIRATÓRIO";
-            float textWidth = text.GetComponent<MeshRenderer>().bounds.size.x;
-            if (textWidth < .01f) textWidth = text.text.Length * text.characterSize * 4.5f;
-            float width = text.name == "APAGADA" ? 2.25f : Mathf.Max(2, textWidth + .4f);
-            if (text.name == "BARRA GIRATÓRIA") width = 3.5f;
-            Solid("Placa — " + text.name, root, text.transform.position, new Vector2(width, .42f), "#363A48", -4);
-            text.color = Color.white;
-            text.GetComponent<MeshRenderer>().sortingOrder = -3;
+            if (trap.label == null) continue;
+            Solid("Estado da corrente", root, trap.label.transform.position, new Vector2(5.3f, .42f), "#292C39", -4);
+            trap.label.GetComponent<MeshRenderer>().sortingOrder = -3;
+            trap.Refresh();
         }
+    }
+
+    private static void DressElectricalSignals(Transform root, CycleTrap trap, Vector2 size, PrisonTrapVisual view)
+    {
+        Vector2 center = trap.transform.position;
+        // Every mark stays inside the existing damage rectangle.
+        Solid("Base isolante", root, center, size, "#252C38", -6);
+        for (float x = -size.x / 2; x < size.x / 2; x += .3f)
+        {
+            float width = Mathf.Min(.3f, size.x / 2 - x);
+            foreach (float side in new[] {-1f, 1f})
+                Solid("Faixa de alta tensão", root, center + new Vector2(x + width / 2, side * (size.y / 2 - .06f)),
+                    new Vector2(width, .12f), Mathf.RoundToInt((x + size.x / 2) / .3f) % 2 == 0 ? "#E0B652" : "#252C38", -4);
+        }
+        view.safeMarks = new GameObject("Sem corrente — marcas verdes");
+        view.warningMarks = new GameObject("Carregando — exclamações");
+        view.electricity = new GameObject("Corrente — descargas");
+        foreach (var group in new[] { view.safeMarks, view.warningMarks, view.electricity })
+            group.transform.SetParent(root, false);
+        var lamps = new List<SpriteRenderer>();
+        for (float x = -size.x / 2 + .55f; x < size.x / 2 - .25f; x += 1.15f)
+        {
+            Vector2 p = center + new Vector2(x, 0);
+            Segment("Livre", view.safeMarks.transform, p + new Vector2(-.15f,0), p + new Vector2(-.03f,-.12f), .075f, "#83F4BA");
+            Segment("Livre", view.safeMarks.transform, p + new Vector2(-.03f,-.12f), p + new Vector2(.19f,.16f), .075f, "#83F4BA");
+            Solid("Alerta", view.warningMarks.transform, p + Vector2.up * .08f, new Vector2(.1f,.25f), "#FFE29B", -3);
+            Solid("Alerta", view.warningMarks.transform, p - Vector2.up * .16f, new Vector2(.1f,.1f), "#FFE29B", -3);
+            Segment("Arco", view.electricity.transform, p + new Vector2(.14f,.27f), p + new Vector2(-.13f,.01f), .08f, "#E7FCFF");
+            Segment("Arco", view.electricity.transform, p + new Vector2(-.13f,.01f), p + new Vector2(.13f,-.01f), .08f, "#E7FCFF");
+            Segment("Arco", view.electricity.transform, p + new Vector2(.13f,-.01f), p + new Vector2(-.14f,-.27f), .08f, "#E7FCFF");
+            var lamp = Draw("Luz de estado", root, square, p + Vector2.up * (size.y / 2 - .22f), new Vector2(.17f,.08f), -3);
+            lamps.Add(lamp);
+        }
+        view.lamps = lamps.ToArray();
+        view.arcs = view.electricity.GetComponentsInChildren<SpriteRenderer>();
+    }
+
+    private static void Segment(string name, Transform parent, Vector2 a, Vector2 b, float width, string color)
+    {
+        var line = Draw(name, parent, square, (a+b)/2, new Vector2((b-a).magnitude,width), -3);
+        line.transform.rotation = Quaternion.Euler(0,0,Mathf.Atan2(b.y-a.y,b.x-a.x)*Mathf.Rad2Deg);
+        ColorUtility.TryParseHtmlString(color, out var tint); line.color = tint;
     }
 
     private static void Border(string name, Transform root, Vector2 center, Vector2 size, string color, int order)

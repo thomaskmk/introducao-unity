@@ -8,7 +8,7 @@ namespace ObstacleCourse
     {
         public GameController game;
         public SpriteRenderer visual;
-        [Min(0.1f)] public float speed = 5f;
+        [Min(0.1f)] public float speed = 4.5f;
         public Vector2 spawn = new Vector2(-13, -4.5f);
         private Rigidbody2D body;
         private Vector2 movement;

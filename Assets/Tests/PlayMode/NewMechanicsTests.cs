@@ -9,7 +9,7 @@ namespace ObstacleCourse.Tests
     public sealed class NewMechanicsTests
     {
         private GameController game;
-        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v4.0", "ObstacleCourse.BestTime.v4.1" };
+        private readonly string[] keys = { "ObstacleCourse.ChallengeUnlocked.v2", "ObstacleCourse.BestTime.v5.0", "ObstacleCourse.BestTime.v5.1" };
         private readonly bool[] existed = new bool[3];
         private readonly float[] values = new float[3];
         [UnitySetUp] public IEnumerator Load()
@@ -71,7 +71,44 @@ namespace ObstacleCourse.Tests
                 foreach(var sprite in visual.frames) Assert.NotNull(sprite);
             }
         }
-        [UnityTest] public IEnumerator SecurityFloorKeepsSafeWarningAndActiveColors()
+        [UnityTest] public IEnumerator TutorialTipsFollowProximityAndHideOutsideTheTutorial()
+        {
+            // Isolate presentation from collisions while visiting every teaching area.
+            foreach(var collider in game.Level.GetComponentsInChildren<Collider2D>())
+                if(collider.isTrigger) collider.enabled=false;
+            game.player.enabled=false;
+            var guide=game.hud.guide;
+            var positions=new[] { new Vector2(-10,-3),new Vector2(-9,3),new Vector2(-1,4),
+                new Vector2(-1,1.3f),new Vector2(-1,-1),new Vector2(-1,-4),new Vector2(10,-1) };
+            for(int i=0;i<positions.Length;i++)
+            {
+                Place(positions[i]); yield return null; yield return null;
+                Assert.AreEqual(i,guide.CurrentTip);
+                Assert.IsTrue(guide.card.gameObject.activeSelf);
+                Assert.IsTrue(guide.pointer.gameObject.activeSelf,"A dica precisa apontar para o perigo.");
+                var target=Camera.main.WorldToScreenPoint(guide.tips[i].target.position);
+                var marker=RectTransformUtility.WorldToScreenPoint(null,guide.marker.position);
+                Assert.Less(Vector2.Distance(target,marker),2,"A indicação deve acompanhar o obstáculo.");
+                Assert.IsFalse(RectTransformUtility.RectangleContainsScreenPoint(guide.card,
+                    Camera.main.WorldToScreenPoint(game.player.Position)),"A dica não deve cobrir o personagem.");
+            }
+            Place(new Vector2(-1,2.1f)); yield return null; yield return null;
+            Assert.AreEqual(3,guide.CurrentTip,"O aviso de choque deve aparecer antes de alcançar a grade.");
+            Assert.IsFalse(RectTransformUtility.RectangleContainsScreenPoint(guide.card,
+                Camera.main.WorldToScreenPoint(game.player.Position)));
+            game.TogglePause(); yield return null;
+            Assert.IsFalse(guide.card.gameObject.activeSelf);
+            game.StartRun(); yield return null;
+            Assert.AreEqual(0,guide.CurrentTip,"Reiniciar deve trazer a dica inicial.");
+            Place(new Vector2(-10,1)); yield return null;
+            Assert.AreEqual(-1,guide.CurrentTip,"Fora das áreas de aproximação, não deve haver caixa.");
+            Assert.IsFalse(guide.pointer.gameObject.activeSelf);
+            game.ReachFinish(); game.PrimaryAction(); yield return null;
+            Assert.IsFalse(guide.card.gameObject.activeSelf,"O desafio não tem dicas.");
+            game.ReturnToMenu(); yield return null;
+            Assert.IsFalse(guide.card.gameObject.activeSelf);
+        }
+        [UnityTest] public IEnumerator SecurityFloorShowsDistinctSignalsAndFreezesOnPause()
         {
             var trap=game.Level.traps[0];
             var art=trap.GetComponent<PrisonTrapVisual>();
@@ -79,24 +116,41 @@ namespace ObstacleCourse.Tests
             yield return null; yield return null;
             Assert.AreEqual(TrapPhase.Safe,trap.Phase);
             Assert.Greater(art.surface.color.b,art.surface.color.r);
+            Assert.IsTrue(art.safeMarks.activeSelf);
+            Assert.IsFalse(art.warningMarks.activeSelf);
+            Assert.IsFalse(art.electricity.activeSelf);
+            StringAssert.Contains("SEM CORRENTE",trap.label.text);
             game.Session.Tick(trap.safeSeconds-game.Session.Elapsed);
             yield return null; yield return null;
             Assert.AreEqual(TrapPhase.Warning,trap.Phase);
             Assert.Greater(art.surface.color.r,.95f);
             Assert.Greater(art.surface.color.g,.7f);
             Assert.Less(art.surface.color.b,.3f);
+            Assert.IsFalse(art.safeMarks.activeSelf);
+            Assert.IsTrue(art.warningMarks.activeSelf);
+            Assert.IsFalse(art.electricity.activeSelf);
+            StringAssert.Contains("LIGANDO",trap.label.text);
             game.Session.Tick(trap.safeSeconds+trap.warningSeconds-game.Session.Elapsed);
             yield return null; yield return null;
             Assert.AreEqual(TrapPhase.Active,trap.Phase);
             Assert.Greater(art.surface.color.r,.95f);
             Assert.Less(art.surface.color.g,.3f);
+            Assert.IsFalse(art.safeMarks.activeSelf);
+            Assert.IsFalse(art.warningMarks.activeSelf);
+            Assert.IsTrue(art.electricity.activeSelf);
+            StringAssert.Contains("ELETRIFICADO",trap.label.text);
             game.TogglePause();
+            yield return null; yield return null; // Let LateUpdate display the final paused clock.
             Color paused=art.surface.color;
+            Color pausedArc=art.arcs[0].color;
             yield return new WaitForSecondsRealtime(.15f);
             Assert.AreEqual(paused,art.surface.color);
+            Assert.AreEqual(pausedArc,art.arcs[0].color);
             game.StartRun(); yield return null; yield return null;
             Assert.AreEqual(TrapPhase.Safe,trap.Phase);
             Assert.Greater(art.surface.color.b,art.surface.color.r);
+            Assert.IsTrue(art.safeMarks.activeSelf);
+            Assert.IsFalse(art.electricity.activeSelf);
             Assert.IsFalse(art.prototype.enabled);
         }
         [UnityTest] public IEnumerator TrapWarnsBeforeDamageAndHurtsPlayerAlreadyInside()
@@ -264,7 +318,7 @@ namespace ObstacleCourse.Tests
                     while(game.IsPlaying && Vector2.Dot(body.position-center,direction)<2.15f &&
                         Time.realtimeSinceStartup<deadline)
                     {
-                        body.linearVelocity=direction*5;
+                        body.linearVelocity=direction*game.player.speed;
                         yield return null;
                     }
                     body.linearVelocity=Vector2.zero;
